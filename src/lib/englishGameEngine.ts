@@ -5,7 +5,14 @@ export type GameWorldId =
   | 'WORLD_2_VOICE_NARRATION'
   | 'WORLD_3_VOCAB_POWER'
   | 'WORLD_4_GRAMMAR_TENSE'
-  | 'WORLD_5_BOSS_GAUNTLET';
+  | 'WORLD_5_BOSS_GAUNTLET'
+  | 'WORLD_6_GS_HISTORY'
+  | 'WORLD_7_GS_POLITY'
+  | 'WORLD_8_GS_GEOGRAPHY_WB'
+  | 'WORLD_9_GS_SCIENCE_GK'
+  | 'WORLD_10_ARITH_PERCENT_PROFIT'
+  | 'WORLD_11_ARITH_RATIO_WORK_SPEED'
+  | 'WORLD_12_ALL_SUBJECT_MEGA_BOSS';
 
 export type EnglishGameState =
   | 'TITLE_MENU'
@@ -19,6 +26,7 @@ export type GameDifficultyMode = 'ARCADE_HEARTS' | 'CHILL_LEARN';
 export interface GameWorldConfig {
   id: GameWorldId;
   stageNumber: number;
+  subjectCategory: 'ALL' | 'English' | 'General Studies' | 'Arithmetic';
   titleEn: string;
   titleBn: string;
   bossNameEn: string;
@@ -54,10 +62,116 @@ export interface TurnEvaluationResult {
 
 export const ENGLISH_GAME_WORLDS: GameWorldConfig[] = [
   {
-    id: 'WORLD_1_PREPOSITION',
+    id: 'WORLD_12_ALL_SUBJECT_MEGA_BOSS',
     stageNumber: 1,
-    titleEn: 'Quest 1: Preposition Kingdom',
-    titleBn: 'অভিযান ১: প্রিপোজিশন রাজ্য (Fixed Prepositions)',
+    subjectCategory: 'ALL',
+    titleEn: 'Mega Quest: All-Subject WBPSC Clerkship Arena (GS + Math + English)',
+    titleBn: 'মেগা অভিযান: ডব্লিউবিপিএসসি সব বিষয়ের সম্মিলিত গেম (GS + অঙ্ক + ইংরেজি)',
+    bossNameEn: 'Writers’ Buildings Grand Examiner',
+    bossNameBn: 'রাইটার্স বিল্ডিংস মহাপরীক্ষক বস',
+    subtitleEn: 'Play General Studies (40M), Arithmetic (30M) & English (30M) interleaved together!',
+    subtitleBn: 'সাধারণ জ্ঞান (৪০), পাটিগণিত (৩০) ও ইংরেজি (৩০)—সব বিষয়ের প্রশ্ন একসাথে খেলার ছলে জয় করো!',
+    topicKeywords: [],
+    questionCount: 15,
+    baseXpPerCorrect: 140,
+    clearBonusXp: 500,
+  },
+  {
+    id: 'WORLD_6_GS_HISTORY',
+    stageNumber: 2,
+    subjectCategory: 'General Studies',
+    titleEn: 'GS Quest 1: Indian History & Freedom Struggle',
+    titleBn: 'সাধারণ জ্ঞান অভিযান ১: ভারতের ইতিহাস ও স্বাধীনতা আন্দোলন',
+    bossNameEn: 'Chronicle Guardian of Bengal & India',
+    bossNameBn: 'ইতিহাস ও স্বাধীনতা সংগ্রাম প্রহরী',
+    subtitleEn: 'Master Indus Valley, Mughals, 1857 Revolt, Bengal Renaissance & National Movement',
+    subtitleBn: 'সিধু-কানহু, রাজা রামমোহন, ১৮৫৭ মহাবিদ্রোহ, সুভাষচন্দ্র ও ভারতের স্বাধীনতা আন্দোলন',
+    topicKeywords: ['History', 'Freedom', 'Movement', 'National'],
+    questionCount: 10,
+    baseXpPerCorrect: 120,
+    clearBonusXp: 350,
+  },
+  {
+    id: 'WORLD_7_GS_POLITY',
+    stageNumber: 3,
+    subjectCategory: 'General Studies',
+    titleEn: 'GS Quest 2: Indian Constitution & Polity Fortress',
+    titleBn: 'সাধারণ জ্ঞান অভিযান ২: ভারতের সংবিধান ও রাষ্ট্রব্যবস্থা',
+    bossNameEn: 'Supreme Constitutional Sentinel',
+    bossNameBn: 'সংবিধান ও মৌলিক অধিকার প্রহরী বস',
+    subtitleEn: 'Conquer Fundamental Rights, Articles, Amendments, Parliament, President & Panchayati Raj',
+    subtitleBn: 'মৌলিক অধিকার, ধারা ৩২, ৪২তম সংশোধনী, রাষ্ট্রপতি, সংসদ ও পঞ্চায়েত ব্যবস্থা',
+    topicKeywords: ['Polity', 'Constitution', 'Economy'],
+    questionCount: 10,
+    baseXpPerCorrect: 120,
+    clearBonusXp: 350,
+  },
+  {
+    id: 'WORLD_8_GS_GEOGRAPHY_WB',
+    stageNumber: 4,
+    subjectCategory: 'General Studies',
+    titleEn: 'GS Quest 3: Geography of West Bengal & India',
+    titleBn: 'সাধারণ জ্ঞান অভিযান ৩: পশ্চিমবঙ্গ ও ভারতের ভূগোল',
+    bossNameEn: 'Himalayan & Sundarban Atlas Titan',
+    bossNameBn: 'পশ্চিমবঙ্গ ও ভারতের ভূগোল টাইটান',
+    subtitleEn: 'Master WB Rivers, Districts, National Parks, Soils, Himalayas & Census 2011 facts',
+    subtitleBn: 'পশ্চিমবঙ্গের নদী, জেলা, সুন্দরবন, জাতীয় উদ্যান, ভারতের নদনদী ও জনগণনা ২০১১',
+    topicKeywords: ['Geography', 'West Bengal', 'Rivers', 'India'],
+    questionCount: 10,
+    baseXpPerCorrect: 120,
+    clearBonusXp: 350,
+  },
+  {
+    id: 'WORLD_9_GS_SCIENCE_GK',
+    stageNumber: 5,
+    subjectCategory: 'General Studies',
+    titleEn: 'GS Quest 4: Everyday Science, Current Affairs & Static GK',
+    titleBn: 'সাধারণ জ্ঞান অভিযান ৪: দৈনন্দিন বিজ্ঞান, কারেন্ট অ্যাফেয়ার্স ও জিকে',
+    bossNameEn: 'Quantum & Nobel Quizmaster',
+    bossNameBn: 'দৈনন্দিন বিজ্ঞান ও কারেন্ট অ্যাফেয়ার্স বস',
+    subtitleEn: 'Vitamins, Physics/Chemistry in daily life, Awards, Books, Sports & WB Schemes',
+    subtitleBn: 'ভিটামিন, আলো ও শব্দের বিজ্ঞান, নোবেল পুরস্কার, খেলাধুলা ও সরকারি প্রকল্প',
+    topicKeywords: ['Science', 'Current Affairs', 'GK', 'Static', 'Culture'],
+    questionCount: 10,
+    baseXpPerCorrect: 125,
+    clearBonusXp: 380,
+  },
+  {
+    id: 'WORLD_10_ARITH_PERCENT_PROFIT',
+    stageNumber: 6,
+    subjectCategory: 'Arithmetic',
+    titleEn: 'Math Quest 1: Percentage, Profit-Loss & Simple Interest',
+    titleBn: 'পাটিগণিত অভিযান ১: শতকরা, লাভ-ক্ষতি ও সরল-চক্রবৃদ্ধি সুদ',
+    bossNameEn: 'Treasury Calculator Boss',
+    bossNameBn: 'শতকরা ও সুদকষা সম্রাট বস',
+    subtitleEn: 'Solve Madhyamik-level Percentage, Profit & Loss, Discount & Interest with 5-sec tricks',
+    subtitleBn: 'শতকরা (Percentage), লাভ ও ক্ষতি এবং সরল সুদের অঙ্ক ৫ সেকেন্ডের শর্টকাট ট্রিকে সমাধান করো',
+    topicKeywords: ['Percentage', 'Profit', 'Loss', 'Interest'],
+    questionCount: 10,
+    baseXpPerCorrect: 130,
+    clearBonusXp: 400,
+  },
+  {
+    id: 'WORLD_11_ARITH_RATIO_WORK_SPEED',
+    stageNumber: 7,
+    subjectCategory: 'Arithmetic',
+    titleEn: 'Math Quest 2: Ratio, Time-Work, Speed-Distance & LCM-HCF',
+    titleBn: 'পাটিগণিত অভিযান ২: অনুপাত, সময়-কার্য, গতিবেগ ও ল.সা.গু-গ.সা.গু',
+    bossNameEn: 'Chronos & Ratio Architect',
+    bossNameBn: 'সময়-কার্য ও অনুপাত সেনাপতি বস',
+    subtitleEn: 'Master LCM Time & Work shortcuts, Train speed, Ratio-Proportion, Average & Simplification',
+    subtitleBn: 'ল.সা.গু ট্রিকে সময় ও কার্য, ট্রেনের গতিবেগ, অনুপাত-সমানুপাত, গড় ও সরলীকরণ জয় করো',
+    topicKeywords: ['Ratio', 'Time', 'Work', 'Distance', 'Speed', 'Average', 'LCM', 'HCF', 'Simplification'],
+    questionCount: 10,
+    baseXpPerCorrect: 130,
+    clearBonusXp: 400,
+  },
+  {
+    id: 'WORLD_1_PREPOSITION',
+    stageNumber: 8,
+    subjectCategory: 'English',
+    titleEn: 'English Quest 1: Preposition & Articles Kingdom',
+    titleBn: 'ইংরেজি অভিযান ১: প্রিপোজিশন ও আর্টিকেল রাজ্য (Fixed Prepositions)',
     bossNameEn: 'Lord Preposition Guardian',
     bossNameBn: 'প্রিপোজিশন গার্ডিয়ান বস',
     subtitleEn: 'Master died of, known to, prefer to, abide by, senior to & fixed rules',
@@ -69,9 +183,10 @@ export const ENGLISH_GAME_WORLDS: GameWorldConfig[] = [
   },
   {
     id: 'WORLD_2_VOICE_NARRATION',
-    stageNumber: 2,
-    titleEn: 'Quest 2: Voice & Narration Fortress',
-    titleBn: 'অভিযান ২: ভয়েস ও ন্যারেশন দুর্গ (Voice & Speech)',
+    stageNumber: 9,
+    subjectCategory: 'English',
+    titleEn: 'English Quest 2: Voice & Narration Fortress',
+    titleBn: 'ইংরেজি অভিযান ২: ভয়েস ও ন্যারেশন দুর্গ (Voice & Speech)',
     bossNameEn: 'Captain Passive & Indirect',
     bossNameBn: 'ভয়েস ও ন্যারেশন সেনাপতি',
     subtitleEn: 'Conquer Active/Passive transforms, By whom, Let-imperatives & Narration shifts',
@@ -83,9 +198,10 @@ export const ENGLISH_GAME_WORLDS: GameWorldConfig[] = [
   },
   {
     id: 'WORLD_3_VOCAB_POWER',
-    stageNumber: 3,
-    titleEn: 'Quest 3: Vocab, Idioms & Phrasal Arena',
-    titleBn: 'অভিযান ৩: ভোকাবুলারি ও ইডিয়ম অ্যারেনা',
+    stageNumber: 10,
+    subjectCategory: 'English',
+    titleEn: 'English Quest 3: Vocab, Idioms & Phrasal Arena',
+    titleBn: 'ইংরেজি অভিযান ৩: ভোকাবুলারি ও ইডিয়ম অ্যারেনা',
     bossNameEn: 'Lexicon Titan',
     bossNameBn: 'শব্দভাণ্ডার টাইটান বস',
     subtitleEn: 'Defeat Synonyms, Antonyms, Idioms, Phrasal Verbs & One-Word Substitutions',
@@ -97,9 +213,10 @@ export const ENGLISH_GAME_WORLDS: GameWorldConfig[] = [
   },
   {
     id: 'WORLD_4_GRAMMAR_TENSE',
-    stageNumber: 4,
-    titleEn: 'Quest 4: Tense, Error & Spelling Lab',
-    titleBn: 'অভিযান ৪: টেন্স, এরর ও বানান ল্যাব',
+    stageNumber: 11,
+    subjectCategory: 'English',
+    titleEn: 'English Quest 4: Tense, Error & Spelling Lab',
+    titleBn: 'ইংরেজি অভিযান ৪: টেন্স, এরর ও বানান ল্যাব',
     bossNameEn: 'Syntax Sentinel',
     bossNameBn: 'গ্রামার ও বানান প্রহরী',
     subtitleEn: 'Spot hidden grammar errors, Subject-Verb rules, Conditionals & tricky Spellings',
@@ -111,11 +228,12 @@ export const ENGLISH_GAME_WORLDS: GameWorldConfig[] = [
   },
   {
     id: 'WORLD_5_BOSS_GAUNTLET',
-    stageNumber: 5,
-    titleEn: 'Quest 5: WBPSC 30-Mark Grand Boss Gauntlet',
-    titleBn: 'অভিযান ৫: ডব্লিউবিপিএসসি ইংরেজি মেগা বস চ্যালেঞ্জ',
-    bossNameEn: 'Grand Examiner of Clerkship Part-I',
-    bossNameBn: 'ক্লার্কশিপ পার্ট-১ মহাপরীক্ষক বস',
+    stageNumber: 12,
+    subjectCategory: 'English',
+    titleEn: 'English Quest 5: WBPSC 30-Mark English Boss Gauntlet',
+    titleBn: 'ইংরেজি অভিযান ৫: ডব্লিউবিপিএসসি ইংরেজি মেগা বস চ্যালেঞ্জ',
+    bossNameEn: 'Grand Examiner of Clerkship English',
+    bossNameBn: 'ক্লার্কশিপ ইংরেজি মহাপরীক্ষক বস',
     subtitleEn: '15 rapid-fire mixed WBPSC Clerkship English questions for ultimate mastery',
     subtitleBn: 'সব অধ্যায় মিলিয়ে ১৫টি বাছাই করা ক্লার্কশিপ ইংরেজি প্রশ্নের চূড়ান্ত লড়াই',
     topicKeywords: [],
@@ -243,22 +361,44 @@ export function getFiftyFiftyEliminatedOptions(correctOption: OptionKey): Option
 }
 
 /**
- * Selects a curated deck of English questions for the chosen Game World.
+ * Selects a curated deck of questions for the chosen Game World across All Subjects, General Studies, Arithmetic, or English.
  */
 export function selectQuestionsForEnglishWorld(
   allQuestions: QuestionItem[],
   worldId: GameWorldId
 ): QuestionItem[] {
-  const englishPool = allQuestions.filter((q) => q.subject === 'English');
   const world =
     ENGLISH_GAME_WORLDS.find((w) => w.id === worldId) || ENGLISH_GAME_WORLDS[0];
 
-  if (world.topicKeywords.length === 0) {
-    return englishPool.slice(0, world.questionCount);
+  if (world.subjectCategory === 'ALL') {
+    const gsPool = allQuestions.filter((q) => q.subject === 'General Studies');
+    const arithPool = allQuestions.filter((q) => q.subject === 'Arithmetic');
+    const engPool = allQuestions.filter((q) => q.subject === 'English');
+
+    const interleaved: QuestionItem[] = [];
+    const maxLen = Math.max(gsPool.length, arithPool.length, engPool.length);
+    for (let i = 0; i < maxLen && interleaved.length < world.questionCount; i++) {
+      if (i < gsPool.length && interleaved.length < world.questionCount) {
+        interleaved.push(gsPool[i]);
+      }
+      if (i < arithPool.length && interleaved.length < world.questionCount) {
+        interleaved.push(arithPool[i]);
+      }
+      if (i < engPool.length && interleaved.length < world.questionCount) {
+        interleaved.push(engPool[i]);
+      }
+    }
+    return interleaved.slice(0, world.questionCount);
   }
 
-  const matched = englishPool.filter((q) => {
-    const haystack = `${q.topic} ${q.subtopic} ${q.questionTextEn} ${q.questionTextBn}`.toLowerCase();
+  const subjectPool = allQuestions.filter((q) => q.subject === world.subjectCategory);
+
+  if (world.topicKeywords.length === 0) {
+    return subjectPool.slice(0, world.questionCount);
+  }
+
+  const matched = subjectPool.filter((q) => {
+    const haystack = `${q.topic} ${q.subtopic || ''} ${q.questionTextEn || q.questionText} ${q.questionTextBn || ''}`.toLowerCase();
     return world.topicKeywords.some((kw) => haystack.includes(kw.toLowerCase()));
   });
 
@@ -267,6 +407,6 @@ export function selectQuestionsForEnglishWorld(
   }
 
   const matchedIds = new Set(matched.map((q) => q.id));
-  const filler = englishPool.filter((q) => !matchedIds.has(q.id));
+  const filler = subjectPool.filter((q) => !matchedIds.has(q.id));
   return [...matched, ...filler].slice(0, world.questionCount);
 }

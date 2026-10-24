@@ -71,13 +71,19 @@ function getGeminiClient(): GoogleGenAI | null {
   });
 }
 
-function withFastTimeout<T>(promise: Promise<T>, ms = 2500): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error('Fast AI timeout reached')), ms)
-    ),
-  ]);
+async function withSafeTimeout<T>(promise: Promise<T>, ms = 8000): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  try {
+    const timeoutPromise = new Promise<null>((resolve) => {
+      timer = setTimeout(() => resolve(null), ms);
+    });
+    return await Promise.race([
+      promise.catch(() => null),
+      timeoutPromise,
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 function toPublicExamQuestion(q: QuestionItem, index: number, config: ExamConfiguration): PublicExamQuestion {
@@ -125,6 +131,7 @@ app.post('/api/mock-tests/start', async (req, res) => {
       uniquenessMode = 'FRESH_MOCK',
       experienceMode = 'REAL_EXAM_SIMULATION',
       subjectFilter,
+      questionOrderMode = 'INTERLEAVED_ALL',
       topicFilter,
       customQuestionCount,
       mistakeQuestionIds = [],
@@ -146,166 +153,182 @@ app.post('/api/mock-tests/start', async (req, res) => {
 
     let aiGeneratedInSessionCount = 0;
 
-    // When useAiFreshGeneration is enabled, dynamically generate fresh verified AI questions for the student
+    // When useAiFreshGeneration is enabled, immediately add verified questions so exam starts with zero latency,
+    // and replenish the live Gemini pool asynchronously in the background.
     if (useAiFreshGeneration && uniquenessMode === 'FRESH_MOCK') {
-      const ai = getGeminiClient();
       const focusTopic =
         topicFilter ||
-        (Array.isArray(weakTopics) && weakTopics.length > 0 ? String(weakTopics[0]) : 'Percentage & Grammar');
-      let liveNewQuestions: QuestionItem[] = [];
+        (Array.isArray(weakTopics) && weakTopics.length > 0 ? String(weakTopics[0]) : 'Indian Polity, Percentage & Grammar');
 
+      let liveNewQuestions: QuestionItem[] = [];
+      if (subjectFilter === 'General Studies' || subjectFilter === 'Arithmetic' || subjectFilter === 'English') {
+        const defaultTopicMap: Record<SubjectName, string> = {
+          'General Studies': 'Indian Polity & Constitution',
+          Arithmetic: 'Simple & Compound Interest',
+          English: 'Grammar (Prepositions, Articles, Tense)',
+        };
+        liveNewQuestions = createDeterministicVerifiedQuestions(
+          subjectFilter,
+          topicFilter || defaultTopicMap[subjectFilter],
+          'medium',
+          3
+        );
+      } else {
+        const detGs = createDeterministicVerifiedQuestions('General Studies', 'Indian Polity & Constitution', 'medium', 1);
+        const detArith = createDeterministicVerifiedQuestions('Arithmetic', 'Simple & Compound Interest', 'medium', 1);
+        const detEng = createDeterministicVerifiedQuestions('English', 'Grammar (Prepositions, Articles, Tense)', 'medium', 1);
+        liveNewQuestions = [...detGs, ...detArith, ...detEng];
+      }
+
+      for (let idx = liveNewQuestions.length - 1; idx >= 0; idx--) {
+        questionsPool.unshift(liveNewQuestions[idx]);
+      }
+      aiGeneratedInSessionCount = liveNewQuestions.length;
+
+      const ai = getGeminiClient();
       if (ai) {
-        try {
-          const response = await withFastTimeout(
+        void (async () => {
+          const response = await withSafeTimeout(
             ai.models.generateContent({
               model: 'gemini-3.8-flash',
-              contents: `Generate 3 brand-new, authentic WBPSC Clerkship Part-I Objective multiple-choice questions (1 for "English", 1 for "General Studies", 1 for "Arithmetic") with special emphasis on "${focusTopic}".
+              contents: `Generate 3 brand-new, authentic WBPSC Clerkship Part-I Objective multiple-choice questions (1 for "General Studies", 1 for "Arithmetic", 1 for "English") with special emphasis on "${focusTopic}".
 Follow exact WBPSC Clerkship Part-I standard:
-- English question in English (Grammar, Preposition, Voice Change, or Vocabulary).
 - General Studies question with both English questionText and Bengali questionTextBn (Indian Constitution, History, WB Geography, or Everyday Science).
 - Arithmetic question with both English questionText and Bengali questionTextBn (Madhyamik standard: Percentage, Ratio, Profit & Loss, Simple Interest, or Time & Work).
+- English question in English (Grammar, Preposition, Voice Change, or Vocabulary) and Bengali questionTextBn.
 - Four distinct options A, B, C, D and one verified correctAnswer ('A', 'B', 'C', or 'D').
 - Include child-friendly Bengali and English explanations.`,
               config: {
                 thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
                 responseMimeType: 'application/json',
                 responseSchema: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    subject: { type: Type.STRING },
-                    topic: { type: Type.STRING },
-                    questionText: { type: Type.STRING },
-                    questionTextBn: { type: Type.STRING },
-                    A: { type: Type.STRING },
-                    B: { type: Type.STRING },
-                    C: { type: Type.STRING },
-                    D: { type: Type.STRING },
-                    correctAnswer: { type: Type.STRING },
-                    simpleConceptBn: { type: Type.STRING },
-                    simpleConceptEn: { type: Type.STRING },
-                    stepsBn: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    stepsEn: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    everydayExampleBn: { type: Type.STRING },
-                    everydayExampleEn: { type: Type.STRING },
-                    memoryTrickBn: { type: Type.STRING },
-                    memoryTrickEn: { type: Type.STRING },
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      subject: { type: Type.STRING },
+                      topic: { type: Type.STRING },
+                      questionText: { type: Type.STRING },
+                      questionTextBn: { type: Type.STRING },
+                      A: { type: Type.STRING },
+                      B: { type: Type.STRING },
+                      C: { type: Type.STRING },
+                      D: { type: Type.STRING },
+                      correctAnswer: { type: Type.STRING },
+                      simpleConceptBn: { type: Type.STRING },
+                      simpleConceptEn: { type: Type.STRING },
+                      stepsBn: { type: Type.ARRAY, items: { type: Type.STRING } },
+                      stepsEn: { type: Type.ARRAY, items: { type: Type.STRING } },
+                      everydayExampleBn: { type: Type.STRING },
+                      everydayExampleEn: { type: Type.STRING },
+                      memoryTrickBn: { type: Type.STRING },
+                      memoryTrickEn: { type: Type.STRING },
+                    },
+                    required: [
+                      'subject',
+                      'topic',
+                      'questionText',
+                      'questionTextBn',
+                      'A',
+                      'B',
+                      'C',
+                      'D',
+                      'correctAnswer',
+                      'simpleConceptBn',
+                      'simpleConceptEn',
+                      'stepsBn',
+                      'stepsEn',
+                      'everydayExampleBn',
+                      'everydayExampleEn',
+                      'memoryTrickBn',
+                      'memoryTrickEn',
+                    ],
                   },
-                  required: [
-                    'subject',
-                    'topic',
-                    'questionText',
-                    'questionTextBn',
-                    'A',
-                    'B',
-                    'C',
-                    'D',
-                    'correctAnswer',
-                    'simpleConceptBn',
-                    'simpleConceptEn',
-                    'stepsBn',
-                    'stepsEn',
-                    'everydayExampleBn',
-                    'everydayExampleEn',
-                    'memoryTrickBn',
-                    'memoryTrickEn',
-                  ],
                 },
               },
-            },
-          }),
-          1800
-        );
+            }),
+            8000
+          );
 
-          const rawArr = JSON.parse(response.text || '[]');
-          if (Array.isArray(rawArr)) {
-            for (let i = 0; i < rawArr.length; i++) {
-              const raw = rawArr[i];
-              const subj: SubjectName =
-                raw.subject === 'English' || raw.subject === 'Arithmetic' || raw.subject === 'General Studies'
-                  ? raw.subject
-                  : i === 0
-                    ? 'English'
-                    : i === 1
+          if (!response || !response.text) return;
+          try {
+            const rawArr = JSON.parse(response.text || '[]');
+            if (Array.isArray(rawArr)) {
+              for (let i = 0; i < rawArr.length; i++) {
+                const raw = rawArr[i];
+                const subj: SubjectName =
+                  raw.subject === 'English' || raw.subject === 'Arithmetic' || raw.subject === 'General Studies'
+                    ? raw.subject
+                    : i === 0
                       ? 'General Studies'
-                      : 'Arithmetic';
-              const opts: Record<OptionKey, string> = {
-                A: String(raw.A || 'Option A'),
-                B: String(raw.B || 'Option B'),
-                C: String(raw.C || 'Option C'),
-                D: String(raw.D || 'Option D'),
-              };
-              const ans: OptionKey = ['A', 'B', 'C', 'D'].includes(raw.correctAnswer) ? raw.correctAnswer : 'B';
-              const candidate: QuestionItem = {
-                id: `ai_mock_live_${Date.now()}_${i}`,
-                questionOrigin: 'AI_GENERATED',
-                examConfigurationId: config.id,
-                examinationYear: 2026,
-                subject: subj,
-                topic: String(raw.topic || focusTopic),
-                difficulty: 'medium',
-                questionText: String(raw.questionText),
-                questionTextBn: String(raw.questionTextBn || raw.questionText),
-                options: opts,
-                correctAnswer: ans,
-                answerKeyStatus: 'FINAL_VERIFIED',
-                verificationStatus: 'VERIFIED',
-                contentHash: computeContentHash(String(raw.questionText), opts),
-                semanticSignature: computeSemanticSignature(subj, String(raw.topic || 'General'), String(raw.questionText)),
-                teacherExplanation: {
-                  yourAnswerSummaryBn: 'তোমার নির্বাচিত উত্তর',
-                  yourAnswerSummaryEn: 'Your selected option',
-                  correctAnswerSummaryBn: `সঠিক উত্তর: অপশন ${ans} (${opts[ans]})`,
-                  correctAnswerSummaryEn: `Correct Answer: Option ${ans} (${opts[ans]})`,
-                  simpleConceptBn: String(raw.simpleConceptBn),
-                  simpleConceptEn: String(raw.simpleConceptEn),
-                  whyWrongByOptionBn: {},
-                  whyWrongByOptionEn: {},
-                  whyCorrectStepByStepBn:
-                    Array.isArray(raw.stepsBn) && raw.stepsBn.length ? raw.stepsBn : [String(raw.simpleConceptBn)],
-                  whyCorrectStepByStepEn:
-                    Array.isArray(raw.stepsEn) && raw.stepsEn.length ? raw.stepsEn : [String(raw.simpleConceptEn)],
-                  everydayExampleBn: String(raw.everydayExampleBn),
-                  everydayExampleEn: String(raw.everydayExampleEn),
-                  memoryTrickBn: String(raw.memoryTrickBn),
-                  memoryTrickEn: String(raw.memoryTrickEn),
-                  followUpQuestion: {
-                    id: `fu_mock_live_${Date.now()}_${i}`,
-                    questionText: String(raw.questionText),
-                    options: opts,
-                    correctAnswer: ans,
-                    simpleHintBn: String(raw.memoryTrickBn),
-                    simpleHintEn: String(raw.memoryTrickEn),
+                      : i === 1
+                        ? 'Arithmetic'
+                        : 'English';
+                const opts: Record<OptionKey, string> = {
+                  A: String(raw.A || 'Option A'),
+                  B: String(raw.B || 'Option B'),
+                  C: String(raw.C || 'Option C'),
+                  D: String(raw.D || 'Option D'),
+                };
+                const ans: OptionKey = ['A', 'B', 'C', 'D'].includes(raw.correctAnswer) ? raw.correctAnswer : 'B';
+                const candidate: QuestionItem = {
+                  id: `ai_mock_live_${Date.now()}_${i}`,
+                  questionOrigin: 'AI_GENERATED',
+                  examConfigurationId: config.id,
+                  examinationYear: 2026,
+                  subject: subj,
+                  topic: String(raw.topic || focusTopic),
+                  difficulty: 'medium',
+                  questionText: String(raw.questionText),
+                  questionTextBn: String(raw.questionTextBn || raw.questionText),
+                  options: opts,
+                  correctAnswer: ans,
+                  answerKeyStatus: 'FINAL_VERIFIED',
+                  verificationStatus: 'VERIFIED',
+                  contentHash: computeContentHash(String(raw.questionText), opts),
+                  semanticSignature: computeSemanticSignature(subj, String(raw.topic || 'General'), String(raw.questionText)),
+                  teacherExplanation: {
+                    yourAnswerSummaryBn: 'তোমার নির্বাচিত উত্তর',
+                    yourAnswerSummaryEn: 'Your selected option',
+                    correctAnswerSummaryBn: `সঠিক উত্তর: অপশন ${ans} (${opts[ans]})`,
+                    correctAnswerSummaryEn: `Correct Answer: Option ${ans} (${opts[ans]})`,
+                    simpleConceptBn: String(raw.simpleConceptBn),
+                    simpleConceptEn: String(raw.simpleConceptEn),
+                    whyWrongByOptionBn: {},
+                    whyWrongByOptionEn: {},
+                    whyCorrectStepByStepBn:
+                      Array.isArray(raw.stepsBn) && raw.stepsBn.length ? raw.stepsBn : [String(raw.simpleConceptBn)],
+                    whyCorrectStepByStepEn:
+                      Array.isArray(raw.stepsEn) && raw.stepsEn.length ? raw.stepsEn : [String(raw.simpleConceptEn)],
+                    everydayExampleBn: String(raw.everydayExampleBn),
+                    everydayExampleEn: String(raw.everydayExampleEn),
+                    memoryTrickBn: String(raw.memoryTrickBn),
+                    memoryTrickEn: String(raw.memoryTrickEn),
+                    followUpQuestion: {
+                      id: `fu_mock_live_${Date.now()}_${i}`,
+                      questionText: String(raw.questionText),
+                      options: opts,
+                      correctAnswer: ans,
+                      simpleHintBn: String(raw.memoryTrickBn),
+                      simpleHintEn: String(raw.memoryTrickEn),
+                    },
+                    encouragementBn: 'দারুণ! AI দ্বারা তৈরি নতুন প্রশ্ন অনুশীলন করে তুমি আরও এগিয়ে যাচ্ছ!',
+                    encouragementEn: 'Great job practicing freshly generated AI questions!',
                   },
-                  encouragementBn: 'দারুণ! AI দ্বারা তৈরি নতুন প্রশ্ন অনুশীলন করে তুমি আরও এগিয়ে যাচ্ছ!',
-                  encouragementEn: 'Great job practicing freshly generated AI questions!',
-                },
-                createdAt: new Date().toISOString(),
-              };
+                  createdAt: new Date().toISOString(),
+                };
 
-              const check = verifyQuestionPipeline(candidate, config.syllabusSummary, questionsPool);
-              if (check.passed) {
-                questionsPool.unshift(candidate);
-                liveNewQuestions.push(candidate);
+                const check = verifyQuestionPipeline(candidate, config.syllabusSummary, questionsPool);
+                if (check.passed) {
+                  questionsPool.unshift(candidate);
+                }
               }
             }
+          } catch {
+            // Ignore malformed JSON from background replenishment
           }
-        } catch (err) {
-          console.warn('Live AI mock question generation fallback:', err);
-        }
+        })();
       }
-
-      if (liveNewQuestions.length === 0) {
-        const detEng = createDeterministicVerifiedQuestions('English', 'Grammar (Prepositions, Articles, Tense)', 'medium', 1);
-        const detGs = createDeterministicVerifiedQuestions('General Studies', 'Indian Polity & Constitution', 'medium', 1);
-        const detArith = createDeterministicVerifiedQuestions('Arithmetic', 'Simple & Compound Interest', 'medium', 1);
-        for (const dq of [...detEng, ...detGs, ...detArith]) {
-          questionsPool.unshift(dq);
-          liveNewQuestions.push(dq);
-        }
-      }
-      aiGeneratedInSessionCount = liveNewQuestions.length;
     }
 
     const selection = selectFreshMockQuestions(
@@ -338,21 +361,35 @@ Follow exact WBPSC Clerkship Part-I standard:
         }
       };
 
-      addForSubject('English', engTarget - curEng, 'Grammar (Prepositions, Articles, Tense)');
       addForSubject('General Studies', gsTarget - curGs, 'Indian Polity & Constitution');
       addForSubject('Arithmetic', arithTarget - curArith, 'Simple & Compound Interest');
+      addForSubject('English', engTarget - curEng, 'Grammar (Prepositions, Articles, Tense)');
 
       selection.limitationNotice = undefined;
     }
 
-    // Ensure ordered by official WBPSC Clerkship Booklet sections: English -> General Studies -> Arithmetic
+    // Order questions either by INTERLEAVED_ALL (Q1=General Studies, Q2=Arithmetic, Q3=English...) or BOOKLET_SECTION (Part A Eng -> Part B GS -> Part C Arith)
     if (!subjectFilter) {
-      const orderRank: Record<SubjectName, number> = {
-        English: 1,
-        'General Studies': 2,
-        Arithmetic: 3,
-      };
-      selection.selected.sort((a, b) => orderRank[a.subject] - orderRank[b.subject]);
+      if (questionOrderMode === 'BOOKLET_SECTION') {
+        const orderRank: Record<SubjectName, number> = {
+          English: 1,
+          'General Studies': 2,
+          Arithmetic: 3,
+        };
+        selection.selected.sort((a, b) => orderRank[a.subject] - orderRank[b.subject]);
+      } else {
+        const gsList = selection.selected.filter((q) => q.subject === 'General Studies');
+        const arithList = selection.selected.filter((q) => q.subject === 'Arithmetic');
+        const engList = selection.selected.filter((q) => q.subject === 'English');
+        const interleaved: QuestionItem[] = [];
+        const maxLen = Math.max(gsList.length, arithList.length, engList.length);
+        for (let i = 0; i < maxLen; i++) {
+          if (i < gsList.length) interleaved.push(gsList[i]);
+          if (i < arithList.length) interleaved.push(arithList[i]);
+          if (i < engList.length) interleaved.push(engList[i]);
+        }
+        selection.selected = interleaved;
+      }
     }
 
     const nowMs = Date.now();
@@ -614,7 +651,7 @@ Provide a clear, encouraging explanation with:
 4. A short memory trick.
 5. One fresh follow-up practice MCQ (with options A, B, C, D and correctAnswer) testing the exact same concept.`;
 
-      const response = await withFastTimeout(
+      const response = await withSafeTimeout(
         ai.models.generateContent({
           model: 'gemini-3.8-flash',
           contents: prompt,
@@ -622,95 +659,97 @@ Provide a clear, encouraging explanation with:
             thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
             responseMimeType: 'application/json',
             responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              simpleConceptBn: { type: Type.STRING },
-              simpleConceptEn: { type: Type.STRING },
-              whyWrongBn: { type: Type.STRING },
-              whyWrongEn: { type: Type.STRING },
-              stepsBn: { type: Type.ARRAY, items: { type: Type.STRING } },
-              stepsEn: { type: Type.ARRAY, items: { type: Type.STRING } },
-              everydayExampleBn: { type: Type.STRING },
-              everydayExampleEn: { type: Type.STRING },
-              memoryTrickBn: { type: Type.STRING },
-              memoryTrickEn: { type: Type.STRING },
-              encouragementBn: { type: Type.STRING },
-              encouragementEn: { type: Type.STRING },
-              followUpQuestion: {
-                type: Type.OBJECT,
-                properties: {
-                  questionText: { type: Type.STRING },
-                  A: { type: Type.STRING },
-                  B: { type: Type.STRING },
-                  C: { type: Type.STRING },
-                  D: { type: Type.STRING },
-                  correctAnswer: { type: Type.STRING },
-                  hintBn: { type: Type.STRING },
-                  hintEn: { type: Type.STRING },
+              type: Type.OBJECT,
+              properties: {
+                simpleConceptBn: { type: Type.STRING },
+                simpleConceptEn: { type: Type.STRING },
+                whyWrongBn: { type: Type.STRING },
+                whyWrongEn: { type: Type.STRING },
+                stepsBn: { type: Type.ARRAY, items: { type: Type.STRING } },
+                stepsEn: { type: Type.ARRAY, items: { type: Type.STRING } },
+                everydayExampleBn: { type: Type.STRING },
+                everydayExampleEn: { type: Type.STRING },
+                memoryTrickBn: { type: Type.STRING },
+                memoryTrickEn: { type: Type.STRING },
+                encouragementBn: { type: Type.STRING },
+                encouragementEn: { type: Type.STRING },
+                followUpQuestion: {
+                  type: Type.OBJECT,
+                  properties: {
+                    questionText: { type: Type.STRING },
+                    A: { type: Type.STRING },
+                    B: { type: Type.STRING },
+                    C: { type: Type.STRING },
+                    D: { type: Type.STRING },
+                    correctAnswer: { type: Type.STRING },
+                    hintBn: { type: Type.STRING },
+                    hintEn: { type: Type.STRING },
+                  },
+                  required: ['questionText', 'A', 'B', 'C', 'D', 'correctAnswer', 'hintBn', 'hintEn'],
                 },
-                required: ['questionText', 'A', 'B', 'C', 'D', 'correctAnswer', 'hintBn', 'hintEn'],
               },
+              required: [
+                'simpleConceptBn',
+                'simpleConceptEn',
+                'whyWrongBn',
+                'whyWrongEn',
+                'stepsBn',
+                'stepsEn',
+                'everydayExampleBn',
+                'everydayExampleEn',
+                'memoryTrickBn',
+                'memoryTrickEn',
+                'encouragementBn',
+                'encouragementEn',
+                'followUpQuestion',
+              ],
             },
-            required: [
-              'simpleConceptBn',
-              'simpleConceptEn',
-              'whyWrongBn',
-              'whyWrongEn',
-              'stepsBn',
-              'stepsEn',
-              'everydayExampleBn',
-              'everydayExampleEn',
-              'memoryTrickBn',
-              'memoryTrickEn',
-              'encouragementBn',
-              'encouragementEn',
-              'followUpQuestion',
-            ],
           },
-        },
-      }),
-      2500
-    );
+        }),
+        7000
+      );
 
-      const parsed = JSON.parse(response.text || '{}');
-      return res.json({
-        provider: 'GEMINI_LIVE',
-        explanation: {
-          yourAnswerSummaryBn: selectedOption ? `অপশন ${selectedOption} (${options?.[selectedOption] || ''})` : 'তোমার প্রশ্ন',
-          yourAnswerSummaryEn: selectedOption ? `Option ${selectedOption} (${options?.[selectedOption] || ''})` : 'Your question',
-          correctAnswerSummaryBn: `অপশন ${correctAnswer} (${options?.[correctAnswer] || ''})`,
-          correctAnswerSummaryEn: `Option ${correctAnswer} (${options?.[correctAnswer] || ''})`,
-          simpleConceptBn: parsed.simpleConceptBn,
-          simpleConceptEn: parsed.simpleConceptEn,
-          whyWrongByOptionBn: selectedOption ? { [selectedOption]: parsed.whyWrongBn } : {},
-          whyWrongByOptionEn: selectedOption ? { [selectedOption]: parsed.whyWrongEn } : {},
-          whyCorrectStepByStepBn: parsed.stepsBn,
-          whyCorrectStepByStepEn: parsed.stepsEn,
-          everydayExampleBn: parsed.everydayExampleBn,
-          everydayExampleEn: parsed.everydayExampleEn,
-          memoryTrickBn: parsed.memoryTrickBn,
-          memoryTrickEn: parsed.memoryTrickEn,
-          followUpQuestion: {
-            id: `fu_live_${Date.now()}`,
-            questionText: parsed.followUpQuestion.questionText,
-            options: {
-              A: parsed.followUpQuestion.A,
-              B: parsed.followUpQuestion.B,
-              C: parsed.followUpQuestion.C,
-              D: parsed.followUpQuestion.D,
+      if (response && response.text) {
+        const parsed = JSON.parse(response.text || '{}');
+        return res.json({
+          provider: 'GEMINI_LIVE',
+          explanation: {
+            yourAnswerSummaryBn: selectedOption ? `অপশন ${selectedOption} (${options?.[selectedOption] || ''})` : 'তোমার প্রশ্ন',
+            yourAnswerSummaryEn: selectedOption ? `Option ${selectedOption} (${options?.[selectedOption] || ''})` : 'Your question',
+            correctAnswerSummaryBn: `অপশন ${correctAnswer} (${options?.[correctAnswer] || ''})`,
+            correctAnswerSummaryEn: `Option ${correctAnswer} (${options?.[correctAnswer] || ''})`,
+            simpleConceptBn: parsed.simpleConceptBn,
+            simpleConceptEn: parsed.simpleConceptEn,
+            whyWrongByOptionBn: selectedOption ? { [selectedOption]: parsed.whyWrongBn } : {},
+            whyWrongByOptionEn: selectedOption ? { [selectedOption]: parsed.whyWrongEn } : {},
+            whyCorrectStepByStepBn: parsed.stepsBn,
+            whyCorrectStepByStepEn: parsed.stepsEn,
+            everydayExampleBn: parsed.everydayExampleBn,
+            everydayExampleEn: parsed.everydayExampleEn,
+            memoryTrickBn: parsed.memoryTrickBn,
+            memoryTrickEn: parsed.memoryTrickEn,
+            followUpQuestion: {
+              id: `fu_live_${Date.now()}`,
+              questionText: parsed.followUpQuestion.questionText,
+              options: {
+                A: parsed.followUpQuestion.A,
+                B: parsed.followUpQuestion.B,
+                C: parsed.followUpQuestion.C,
+                D: parsed.followUpQuestion.D,
+              },
+              correctAnswer: (['A', 'B', 'C', 'D'].includes(parsed.followUpQuestion.correctAnswer)
+                ? parsed.followUpQuestion.correctAnswer
+                : 'B') as OptionKey,
+              simpleHintBn: parsed.followUpQuestion.hintBn,
+              simpleHintEn: parsed.followUpQuestion.hintEn,
             },
-            correctAnswer: (['A', 'B', 'C', 'D'].includes(parsed.followUpQuestion.correctAnswer)
-              ? parsed.followUpQuestion.correctAnswer
-              : 'B') as OptionKey,
-            simpleHintBn: parsed.followUpQuestion.hintBn,
-            simpleHintEn: parsed.followUpQuestion.hintEn,
+            encouragementBn: parsed.encouragementBn,
+            encouragementEn: parsed.encouragementEn,
           },
-          encouragementBn: parsed.encouragementBn,
-          encouragementEn: parsed.encouragementEn,
-        },
-      });
-    } catch (err) {
-      console.warn('Gemini teacher call failed, using verified structured explanation fallback:', err);
+        });
+      }
+    } catch {
+      // Fall back cleanly to verified teacher explanation
     }
   }
 
@@ -943,6 +982,7 @@ function createDeterministicVerifiedQuestions(
     } else {
       const gsBank = [
         {
+          topicName: 'Geography of India & West Bengal',
           q: `Which district of West Bengal has the highest literacy rate according to the 2011 Census? (Practice #${n})`,
           qBn: '২০১১ সালের জনগণনা অনুযায়ী পশ্চিমবঙ্গের কোন জেলায় সাক্ষরতার হার (Literacy Rate) সর্বাধিক?',
           opts: { A: 'Kolkata', B: 'Purba Medinipur', C: 'North 24 Parganas', D: 'Howrah' } as Record<OptionKey, string>,
@@ -958,6 +998,7 @@ function createDeterministicVerifiedQuestions(
           } as Partial<Record<OptionKey, string>>,
         },
         {
+          topicName: 'Indian Polity & Constitution',
           q: `Which constitutional amendment added the Fundamental Duties to the Constitution of India? (Practice #${n})`,
           qBn: 'ভারতীয় সংবিধানের কোন সংশোধনীর মাধ্যমে মৌলিক কর্তব্যগুলি (Fundamental Duties) যুক্ত করা হয়েছিল?',
           opts: { A: '40th Amendment', B: '42nd Amendment', C: '44th Amendment', D: '86th Amendment' } as Record<OptionKey, string>,
@@ -972,6 +1013,38 @@ function createDeterministicVerifiedQuestions(
             D: '৮৬তম সংশোধনী (২০০২) দ্বারা ১১তম মৌলিক কর্তব্য (৬-১৪ বছরের শিক্ষার সুযোগ) পরে যোগ হয়, কিন্তু মূল মৌলিক কর্তব্য যুক্ত হয় ৪২তম সংশোধনীতে।',
           } as Partial<Record<OptionKey, string>>,
         },
+        {
+          topicName: 'Indian History & National Movement',
+          q: `Who founded the 'Forward Bloc' in May 1939 after resigning from the presidency of the Indian National Congress? (Practice #${n})`,
+          qBn: '১৯৩৯ সালের মে মাসে জাতীয় কংগ্রেসের সভাপতি পদ ত্যাগ করার পর কে "ফরওয়ার্ড ব্লক" (Forward Bloc) প্রতিষ্ঠা করেছিলেন?',
+          opts: { A: 'Chittaranjan Das', B: 'Subhas Chandra Bose', C: 'Rash Behari Bose', D: 'Jawaharlal Nehru' } as Record<OptionKey, string>,
+          ans: 'B' as OptionKey,
+          conceptBn: '১৯৩৯ সালে ত্রিপুরী কংগ্রেসের অধিবেশনের পর সভাপতি পদ থেকে ইস্তফা দিয়ে নেতাজি সুভাষচন্দ্র বসু ১৯৩৯ সালের ৩ মে ফরওয়ার্ড ব্লক গঠন করেন।',
+          conceptEn: 'Netaji Subhas Chandra Bose founded the Forward Bloc on 3 May 1939 after resigning from the Congress presidency following the Tripuri session.',
+          trickBn: '⚡ শর্টকাট ট্রিক: ১৯৩৮ হরিপুরা + ১৯৩৯ ত্রিপুরী কংগ্রেস + ১৯৩৯ ফরওয়ার্ড ব্লক = নেতাজি সুভাষচন্দ্র বসু! আর "স্বরাজ্য দল" (১৯২৩) = চিত্তরঞ্জন দাশ!',
+          trickEn: 'Shortcut Trick: 1939 Tripuri Session + Forward Bloc = Netaji Subhas Chandra Bose (Swaraj Party 1923 = C.R. Das)!',
+          wrongBn: {
+            A: 'দেশবন্ধু চিত্তরঞ্জন দাশ ১৯২৩ সালে মতিলাল নেহরুর সাথে "স্বরাজ্য দল" প্রতিষ্ঠা করেছিলেন, ফরওয়ার্ড ব্লক নয়।',
+            C: 'রাসবিহারী বসু ইন্ডিয়ান ইন্ডিপেন্ডেন্স লিগ ও আজাদ হিন্দ ফৌজের গঠনের সাথে যুক্ত ছিলেন।',
+            D: 'জওহরলাল নেহরু ১৯২৯ সালের লাহোর কংগ্রেসের সভাপতি ছিলেন।',
+          } as Partial<Record<OptionKey, string>>,
+        },
+        {
+          topicName: 'Everyday Science',
+          q: `Deficiency of which vitamin causes 'Night Blindness' (Nyctalopia) in human beings? (Practice #${n})`,
+          qBn: 'মানুষের শরীরে কোন ভিটামিনের অভাবে "রাতকানা" (Night Blindness) রোগ হয়?',
+          opts: { A: 'Vitamin B1', B: 'Vitamin A', C: 'Vitamin C', D: 'Vitamin D' } as Record<OptionKey, string>,
+          ans: 'B' as OptionKey,
+          conceptBn: 'ভিটামিন A (রাসায়নিক নাম: রেটিনল / Retinol)-এর অভাবে চোখের রেটিনার রড কোষ ক্ষতিগ্রস্ত হয় এবং রাতকানা (Night Blindness) রোগ হয়।',
+          conceptEn: 'Vitamin A (Retinol) is essential for rhodopsin in the retina; its deficiency causes Night Blindness.',
+          trickBn: '⚡ শর্টকাট ট্রিক: A = Eye (চোখ / রাতকানা), B1 = Beriberi (বেরিবেরি), C = Scurvy (স্কার্ভি / মাড়ি), D = Rickets (রিকেট / হাড়)!',
+          trickEn: 'Shortcut Trick: A = Eye (Night Blindness), B1 = Beriberi, C = Scurvy, D = Rickets!',
+          wrongBn: {
+            A: 'ভিটামিন B1 (থিয়ামিন)-এর অভাবে বেরিবেরি রোগ হয়।',
+            C: 'ভিটামিন C (অ্যাসকরবিক অ্যাসিড)-এর অভাবে স্কার্ভি রোগ হয়।',
+            D: 'ভিটামিন D (ক্যালসিফেরল)-এর অভাবে শিশুদের রিকেট রোগ হয়।',
+          } as Partial<Record<OptionKey, string>>,
+        },
       ];
       const chosen = gsBank[i % gsBank.length];
       results.push({
@@ -980,7 +1053,7 @@ function createDeterministicVerifiedQuestions(
         examConfigurationId: 'wbpsc_clerkship_2023_part1',
         examinationYear: 2026,
         subject: 'General Studies',
-        topic: topic || 'Indian Polity & Constitution',
+        topic: topic || chosen.topicName,
         difficulty,
         questionText: chosen.q,
         questionTextBn: chosen.qBn,
@@ -989,7 +1062,7 @@ function createDeterministicVerifiedQuestions(
         answerKeyStatus: 'FINAL_VERIFIED',
         verificationStatus: 'VERIFIED',
         contentHash: computeContentHash(chosen.q, chosen.opts),
-        semanticSignature: `${computeSemanticSignature('General Studies', topic || 'General Studies', chosen.q)}_${n}`,
+        semanticSignature: `${computeSemanticSignature('General Studies', topic || chosen.topicName, chosen.q)}_${n}`,
         teacherExplanation: {
           yourAnswerSummaryBn: 'তোমার নির্বাচিত উত্তর',
           yourAnswerSummaryEn: 'Your selected option',
@@ -999,10 +1072,10 @@ function createDeterministicVerifiedQuestions(
           simpleConceptEn: chosen.conceptEn,
           whyWrongByOptionBn: chosen.wrongBn,
           whyWrongByOptionEn: { A: 'Does not match verified official records.' },
-          whyCorrectStepByStepBn: ['ধাপ ১: সরকারি তথ্য ও সংবিধানের ইতিহাস যাচাই করো।', `ধাপ ২: ${chosen.conceptBn}`],
-          whyCorrectStepByStepEn: ['Step 1: Check verified constitutional/census records.', `Step 2: ${chosen.conceptEn}`],
-          everydayExampleBn: 'WBPSC পরীক্ষায় পশ্চিমবঙ্গের ভূগোল ও ভারতের সংবিধান থেকে প্রতি বছর প্রশ্ন আসে।',
-          everydayExampleEn: 'West Bengal Census and Constitutional Amendments are core high-yield topics in WBPSC Clerkship.',
+          whyCorrectStepByStepBn: ['ধাপ ১: সরকারি তথ্য ও সিলেবাসের মূল সূত্র যাচাই করো।', `ধাপ ২: ${chosen.conceptBn}`],
+          whyCorrectStepByStepEn: ['Step 1: Check verified official records.', `Step 2: ${chosen.conceptEn}`],
+          everydayExampleBn: 'WBPSC ক্লার্কশিপ পরীক্ষায় ইতিহাস, ভূগোল, সংবিধান ও দৈনন্দিন বিজ্ঞান থেকে মোট ৪০ নম্বরের প্রশ্ন আসে।',
+          everydayExampleEn: 'History, WB Geography, Polity, and Everyday Science together carry 40 marks in WBPSC Clerkship Part-I.',
           memoryTrickBn: chosen.trickBn,
           memoryTrickEn: chosen.trickEn,
           followUpQuestion: {
@@ -1042,7 +1115,7 @@ app.post('/api/ai/generate-questions', async (req, res) => {
 
   if (ai) {
     try {
-      const response = await withFastTimeout(
+      const response = await withSafeTimeout(
         ai.models.generateContent({
           model: 'gemini-3.8-flash',
           contents: `Generate ${requestedCount} original WBPSC Clerkship Part-I multiple-choice questions for Subject: "${subject}", Topic: "${topic}", Difficulty: "${difficulty}".
@@ -1056,109 +1129,111 @@ Do not copy existing questions; create fresh scenarios.`,
             thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
             responseMimeType: 'application/json',
             responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                questionText: { type: Type.STRING },
-                questionTextBn: { type: Type.STRING },
-                A: { type: Type.STRING },
-                B: { type: Type.STRING },
-                C: { type: Type.STRING },
-                D: { type: Type.STRING },
-                correctAnswer: { type: Type.STRING },
-                simpleConceptBn: { type: Type.STRING },
-                simpleConceptEn: { type: Type.STRING },
-                stepsBn: { type: Type.ARRAY, items: { type: Type.STRING } },
-                stepsEn: { type: Type.ARRAY, items: { type: Type.STRING } },
-                everydayExampleBn: { type: Type.STRING },
-                everydayExampleEn: { type: Type.STRING },
-                memoryTrickBn: { type: Type.STRING },
-                memoryTrickEn: { type: Type.STRING },
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  questionText: { type: Type.STRING },
+                  questionTextBn: { type: Type.STRING },
+                  A: { type: Type.STRING },
+                  B: { type: Type.STRING },
+                  C: { type: Type.STRING },
+                  D: { type: Type.STRING },
+                  correctAnswer: { type: Type.STRING },
+                  simpleConceptBn: { type: Type.STRING },
+                  simpleConceptEn: { type: Type.STRING },
+                  stepsBn: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  stepsEn: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  everydayExampleBn: { type: Type.STRING },
+                  everydayExampleEn: { type: Type.STRING },
+                  memoryTrickBn: { type: Type.STRING },
+                  memoryTrickEn: { type: Type.STRING },
+                },
+                required: [
+                  'questionText',
+                  'questionTextBn',
+                  'A',
+                  'B',
+                  'C',
+                  'D',
+                  'correctAnswer',
+                  'simpleConceptBn',
+                  'simpleConceptEn',
+                  'stepsBn',
+                  'stepsEn',
+                  'everydayExampleBn',
+                  'everydayExampleEn',
+                  'memoryTrickBn',
+                  'memoryTrickEn',
+                ],
               },
-              required: [
-                'questionText',
-                'questionTextBn',
-                'A',
-                'B',
-                'C',
-                'D',
-                'correctAnswer',
-                'simpleConceptBn',
-                'simpleConceptEn',
-                'stepsBn',
-                'stepsEn',
-                'everydayExampleBn',
-                'everydayExampleEn',
-                'memoryTrickBn',
-                'memoryTrickEn',
-              ],
             },
           },
-        },
-      }),
-      2500
-    );
+        }),
+        7000
+      );
 
-      const rawList = JSON.parse(response.text || '[]');
-      if (Array.isArray(rawList) && rawList.length > 0) {
-        providerUsed = 'GEMINI_LIVE';
-        generatedCandidates = rawList.map((raw: any, idx: number) => {
-          const opts: Record<OptionKey, string> = {
-            A: String(raw.A || 'Option A'),
-            B: String(raw.B || 'Option B'),
-            C: String(raw.C || 'Option C'),
-            D: String(raw.D || 'Option D'),
-          };
-          const ans: OptionKey = ['A', 'B', 'C', 'D'].includes(raw.correctAnswer) ? raw.correctAnswer : 'B';
-          return {
-            id: `ai_gemini_${Date.now()}_${idx}`,
-            questionOrigin: 'AI_GENERATED',
-            examConfigurationId: config.id,
-            examinationYear: 2026,
-            subject: subject as SubjectName,
-            topic,
-            difficulty,
-            questionText: String(raw.questionText),
-            questionTextBn: String(raw.questionTextBn || ''),
-            options: opts,
-            correctAnswer: ans,
-            answerKeyStatus: 'FINAL_VERIFIED',
-            verificationStatus: 'VERIFIED',
-            contentHash: computeContentHash(String(raw.questionText), opts),
-            semanticSignature: computeSemanticSignature(subject as SubjectName, topic, String(raw.questionText)),
-            teacherExplanation: {
-              yourAnswerSummaryBn: 'তোমার নির্বাচিত উত্তর',
-              yourAnswerSummaryEn: 'Your selected option',
-              correctAnswerSummaryBn: `অপশন ${ans} (${opts[ans]})`,
-              correctAnswerSummaryEn: `Option ${ans} (${opts[ans]})`,
-              simpleConceptBn: String(raw.simpleConceptBn),
-              simpleConceptEn: String(raw.simpleConceptEn),
-              whyWrongByOptionBn: {},
-              whyWrongByOptionEn: {},
-              whyCorrectStepByStepBn: Array.isArray(raw.stepsBn) && raw.stepsBn.length ? raw.stepsBn : [String(raw.simpleConceptBn)],
-              whyCorrectStepByStepEn: Array.isArray(raw.stepsEn) && raw.stepsEn.length ? raw.stepsEn : [String(raw.simpleConceptEn)],
-              everydayExampleBn: String(raw.everydayExampleBn),
-              everydayExampleEn: String(raw.everydayExampleEn),
-              memoryTrickBn: String(raw.memoryTrickBn),
-              memoryTrickEn: String(raw.memoryTrickEn),
-              followUpQuestion: {
-                id: `fu_${Date.now()}_${idx}`,
-                questionText: String(raw.questionText),
-                options: opts,
-                correctAnswer: ans,
-                simpleHintBn: String(raw.memoryTrickBn),
-                simpleHintEn: String(raw.memoryTrickEn),
+      if (response && response.text) {
+        const rawList = JSON.parse(response.text || '[]');
+        if (Array.isArray(rawList) && rawList.length > 0) {
+          providerUsed = 'GEMINI_LIVE';
+          generatedCandidates = rawList.map((raw: any, idx: number) => {
+            const opts: Record<OptionKey, string> = {
+              A: String(raw.A || 'Option A'),
+              B: String(raw.B || 'Option B'),
+              C: String(raw.C || 'Option C'),
+              D: String(raw.D || 'Option D'),
+            };
+            const ans: OptionKey = ['A', 'B', 'C', 'D'].includes(raw.correctAnswer) ? raw.correctAnswer : 'B';
+            return {
+              id: `ai_gemini_${Date.now()}_${idx}`,
+              questionOrigin: 'AI_GENERATED',
+              examConfigurationId: config.id,
+              examinationYear: 2026,
+              subject: subject as SubjectName,
+              topic,
+              difficulty,
+              questionText: String(raw.questionText),
+              questionTextBn: String(raw.questionTextBn || ''),
+              options: opts,
+              correctAnswer: ans,
+              answerKeyStatus: 'FINAL_VERIFIED',
+              verificationStatus: 'VERIFIED',
+              contentHash: computeContentHash(String(raw.questionText), opts),
+              semanticSignature: computeSemanticSignature(subject as SubjectName, topic, String(raw.questionText)),
+              teacherExplanation: {
+                yourAnswerSummaryBn: 'তোমার নির্বাচিত উত্তর',
+                yourAnswerSummaryEn: 'Your selected option',
+                correctAnswerSummaryBn: `অপশন ${ans} (${opts[ans]})`,
+                correctAnswerSummaryEn: `Option ${ans} (${opts[ans]})`,
+                simpleConceptBn: String(raw.simpleConceptBn),
+                simpleConceptEn: String(raw.simpleConceptEn),
+                whyWrongByOptionBn: {},
+                whyWrongByOptionEn: {},
+                whyCorrectStepByStepBn: Array.isArray(raw.stepsBn) && raw.stepsBn.length ? raw.stepsBn : [String(raw.simpleConceptBn)],
+                whyCorrectStepByStepEn: Array.isArray(raw.stepsEn) && raw.stepsEn.length ? raw.stepsEn : [String(raw.simpleConceptEn)],
+                everydayExampleBn: String(raw.everydayExampleBn),
+                everydayExampleEn: String(raw.everydayExampleEn),
+                memoryTrickBn: String(raw.memoryTrickBn),
+                memoryTrickEn: String(raw.memoryTrickEn),
+                followUpQuestion: {
+                  id: `fu_${Date.now()}_${idx}`,
+                  questionText: String(raw.questionText),
+                  options: opts,
+                  correctAnswer: ans,
+                  simpleHintBn: String(raw.memoryTrickBn),
+                  simpleHintEn: String(raw.memoryTrickEn),
+                },
+                encouragementBn: 'চমৎকার চেষ্টা! নতুন প্রশ্ন অনুশীলন করলে পরীক্ষার ভীতি পুরোপুরি কেটে যাবে!',
+                encouragementEn: 'Great job practicing fresh questions!',
               },
-              encouragementBn: 'চমৎকার চেষ্টা! নতুন প্রশ্ন অনুশীলন করলে পরীক্ষার ভীতি পুরোপুরি কেটে যাবে!',
-              encouragementEn: 'Great job practicing fresh questions!',
-            },
-            createdAt: new Date().toISOString(),
-          };
-        });
+              createdAt: new Date().toISOString(),
+            };
+          });
+        }
       }
-    } catch (err) {
-      console.warn('Gemini question generation fallback triggered:', err);
+    } catch {
+      // Fall back cleanly to deterministic verified generator
     }
   }
 
@@ -1314,7 +1389,7 @@ app.post('/api/ai/evaluate-part2', async (req, res) => {
   const ai = getGeminiClient();
   if (ai) {
     try {
-      const response = await withFastTimeout(
+      const response = await withSafeTimeout(
         ai.models.generateContent({
           model: 'gemini-3.8-flash',
           contents: `You are an encouraging WBPSC Clerkship Part-II (Conventional Written) examiner.
@@ -1342,16 +1417,18 @@ Provide constructive feedback in both simple Bengali and English. Note: Do NOT a
             },
           },
         }),
-        2500
+        7000
       );
-      const parsed = JSON.parse(response.text || '{}');
-      return res.json({
-        provider: 'GEMINI_LIVE',
-        wordCount,
-        ...parsed,
-      });
-    } catch (err) {
-      console.warn('Part-II Gemini evaluation fallback:', err);
+      if (response && response.text) {
+        const parsed = JSON.parse(response.text || '{}');
+        return res.json({
+          provider: 'GEMINI_LIVE',
+          wordCount,
+          ...parsed,
+        });
+      }
+    } catch {
+      // Fall back cleanly to rubric evaluator
     }
   }
 
@@ -1392,7 +1469,7 @@ app.post('/api/ai/analyze-mock-result', async (req, res) => {
   const ai = getGeminiClient();
   if (ai) {
     try {
-      const response = await withFastTimeout(
+      const response = await withSafeTimeout(
         ai.models.generateContent({
           model: 'gemini-3.8-flash',
           contents: `You are an expert, encouraging WBPSC Clerkship exam coach analyzing a student's mock test result in simple Bengali and English.
@@ -1447,16 +1524,18 @@ Provide a realistic, child-friendly coaching report:
             },
           },
         }),
-        2200
+        7000
       );
 
-      const parsed = JSON.parse(response.text || '{}');
-      return res.json({
-        provider: 'GEMINI_LIVE',
-        ...parsed,
-      });
-    } catch (err) {
-      console.warn('Gemini mock result analysis fallback:', err);
+      if (response && response.text) {
+        const parsed = JSON.parse(response.text || '{}');
+        return res.json({
+          provider: 'GEMINI_LIVE',
+          ...parsed,
+        });
+      }
+    } catch {
+      // Fall back cleanly to deterministic coach report
     }
   }
 
@@ -1507,37 +1586,40 @@ app.post('/api/ai/teacher-tts', async (req, res) => {
   const ai = getGeminiClient();
   if (ai) {
     try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash-lite-tts',
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                text: cleanText,
+      const response = await withSafeTimeout(
+        ai.models.generateContent({
+          model: 'gemini-3.8-flash-lite-tts',
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: cleanText,
+                },
+              ],
+            },
+          ],
+          config: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: 'Kore' },
               },
-            ],
-          },
-        ],
-        config: {
-          responseModalities: ['AUDIO'],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Kore' },
             },
           },
-        },
-      });
+        }),
+        7000
+      );
 
-      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      const base64Audio = response?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (base64Audio) {
         return res.json({
           provider: 'GEMINI_TTS',
           audioDataUrl: `data:audio/wav;base64,${base64Audio}`,
         });
       }
-    } catch (err) {
-      console.warn('Gemini TTS fallback to browser speech synthesis:', err);
+    } catch {
+      // Fall back cleanly to browser speech synthesis
     }
   }
 
@@ -1555,7 +1637,7 @@ app.post('/api/ai/generate-study-plan', async (req, res) => {
 
   if (ai) {
     try {
-      const response = await withFastTimeout(
+      const response = await withSafeTimeout(
         ai.models.generateContent({
           model: 'gemini-3.8-flash',
           contents: `Create a personalized WBPSC Clerkship Part-I & Part-II study plan and quick formula/grammar cheat-sheet for a student studying ${dailyHours} hours/day with target exam date ${targetExamDate}.
@@ -1591,15 +1673,17 @@ Return bilingual Bengali & English output with:
             },
           },
         }),
-        2200
+        7000
       );
-      const parsed = JSON.parse(response.text || '{}');
-      return res.json({
-        provider: 'GEMINI_LIVE',
-        ...parsed,
-      });
-    } catch (err) {
-      console.warn('Gemini study plan fallback:', err);
+      if (response && response.text) {
+        const parsed = JSON.parse(response.text || '{}');
+        return res.json({
+          provider: 'GEMINI_LIVE',
+          ...parsed,
+        });
+      }
+    } catch {
+      // Fall back cleanly to study planner engine
     }
   }
 
@@ -1641,7 +1725,7 @@ app.post('/api/ai/generate-part2-prompt', async (req, res) => {
 
   if (ai) {
     try {
-      const response = await withFastTimeout(
+      const response = await withSafeTimeout(
         ai.models.generateContent({
           model: 'gemini-3.8-flash',
           contents: `Generate a fresh, authentic WBPSC Clerkship Part-II (Conventional Written) practice task for ${group}, Task Type: ${taskType}.
@@ -1668,21 +1752,23 @@ Return JSON with:
             },
           },
         }),
-        2200
+        7000
       );
-      const parsed = JSON.parse(response.text || '{}');
-      return res.json({
-        provider: 'GEMINI_LIVE',
-        task: {
-          id: `part2_ai_${Date.now()}`,
-          group,
-          taskType,
-          marks: 15,
-          ...parsed,
-        },
-      });
-    } catch (err) {
-      console.warn('Gemini Part-II prompt generation fallback:', err);
+      if (response && response.text) {
+        const parsed = JSON.parse(response.text || '{}');
+        return res.json({
+          provider: 'GEMINI_LIVE',
+          task: {
+            id: `part2_ai_${Date.now()}`,
+            group,
+            taskType,
+            marks: 15,
+            ...parsed,
+          },
+        });
+      }
+    } catch {
+      // Fall back cleanly to deterministic Part-II prompt
     }
   }
 
@@ -1725,7 +1811,7 @@ async function startServer() {
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false, watch: null },
       appType: 'spa',
     });
     app.use(vite.middlewares);

@@ -71,6 +71,9 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
     examConfigurations[0]?.id || 'wbpsc_clerkship_2023_part1'
   );
   const [uniquenessMode, setUniquenessMode] = useState<PracticeUniquenessMode>('FRESH_MOCK');
+  const [mockSubjectScope, setMockSubjectScope] = useState<
+    'ALL_MIXED' | 'ALL_BOOKLET' | 'General Studies' | 'Arithmetic' | 'English'
+  >('ALL_MIXED');
   const [customCount, setCustomCount] = useState<number>(100);
   const [activeSession, setActiveSession] = useState<MockTestSession | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -181,7 +184,34 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
     return () => clearInterval(interval);
   }, [activeSession, submittedResult]);
 
-  const handleStartMockTest = async () => {
+  const handleStartMockTest = async (
+    overrideScope?: 'ALL_MIXED' | 'ALL_BOOKLET' | 'General Studies' | 'Arithmetic' | 'English',
+    overrideCount?: number
+  ) => {
+    const effectiveScope = overrideScope || mockSubjectScope;
+    const effectiveCount =
+      overrideCount !== undefined
+        ? overrideCount
+        : effectiveScope === 'General Studies' && customCount === 100
+          ? 40
+          : (effectiveScope === 'Arithmetic' || effectiveScope === 'English') && customCount === 100
+            ? 30
+            : customCount;
+
+    if (overrideScope) {
+      setMockSubjectScope(overrideScope);
+    }
+
+    const subjectFilterParam =
+      effectiveScope === 'General Studies' ||
+      effectiveScope === 'Arithmetic' ||
+      effectiveScope === 'English'
+        ? effectiveScope
+        : undefined;
+
+    const questionOrderModeParam =
+      effectiveScope === 'ALL_BOOKLET' ? 'BOOKLET_SECTION' : 'INTERLEAVED_ALL';
+
     setLoading(true);
     setErrorMsg(null);
     setSubmittedResult(null);
@@ -208,7 +238,9 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
           examConfigurationId: selectedConfigId,
           uniquenessMode,
           experienceMode: isGameMode ? 'GAMIFIED_CHALLENGE' : 'REAL_EXAM_SIMULATION',
-          customQuestionCount: customCount,
+          subjectFilter: subjectFilterParam,
+          questionOrderMode: questionOrderModeParam,
+          customQuestionCount: effectiveCount,
           mistakeQuestionIds,
           clientSeenIds: seenQuestionIds,
           useAiFreshGeneration,
@@ -221,6 +253,7 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
       setActiveSession(data.session);
       setAiGeneratedCountInSession(Number(data.aiGeneratedInSessionCount || 0));
       setCurrentIndex(0);
+      setPaletteSectionFilter('ALL');
       sessionStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, data.session.id);
 
       const deadlineMs = new Date(data.session.deadlineAt).getTime();
@@ -1010,48 +1043,79 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
           </div>
         )}
 
-        {/* Official WBPSC 3-Part Section Navigation Bar (English 30 / General Studies 40 / Arithmetic 30) */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 flex flex-wrap items-center justify-between gap-2">
+        {/* Official WBPSC 3-Part Section Navigation Bar (General Studies 40 / Arithmetic 30 / English 30) */}
+        <div
+          className="rounded-xl border border-slate-200 bg-white p-2.5 flex flex-wrap items-center justify-between gap-2"
+          data-testid="live-subject-section-bar"
+        >
           <div className="flex flex-wrap items-center gap-2">
-            {sectionStats.map((sec, sIdx) => {
-              const isCurrentSection = currentQ.subject === sec.subject;
-              const labelPart = sIdx === 0 ? 'Part A' : sIdx === 1 ? 'Part B' : 'Part C';
-              return (
-                <button
-                  key={sec.subject}
-                  type="button"
-                  onClick={() => {
-                    setCurrentIndex(sec.firstIndex);
-                    setPaletteSectionFilter('ALL');
-                  }}
-                  className={`rounded-lg border px-3.5 py-2 text-xs transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 ${
-                    isCurrentSection
-                      ? 'border-slate-900 bg-slate-900 text-white font-semibold'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <span>
-                    {labelPart}: {sec.subject} ({sec.rangeText})
-                  </span>
-                  <span
-                    className={`font-mono-tabular px-1.5 py-0.5 rounded text-[11px] ${
-                      isCurrentSection ? 'bg-slate-700 text-sky-300' : 'bg-slate-200/80 text-slate-700'
+            {sectionStats
+              .filter((sec) => sec.total > 0)
+              .map((sec) => {
+                const isCurrentSection = currentQ.subject === sec.subject;
+                const labelPart =
+                  sec.subject === 'English'
+                    ? 'Part A: English'
+                    : sec.subject === 'General Studies'
+                      ? 'Part B: General Studies (GK/GS)'
+                      : 'Part C: Arithmetic (Math)';
+                return (
+                  <button
+                    key={sec.subject}
+                    type="button"
+                    data-testid={`live-section-jump-${sec.subject}`}
+                    onClick={() => {
+                      setCurrentIndex(sec.firstIndex);
+                      setPaletteSectionFilter(sec.subject);
+                    }}
+                    className={`rounded-lg border px-3.5 py-2 text-xs transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                      isCurrentSection
+                        ? 'border-slate-900 bg-slate-900 text-white font-semibold'
+                        : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
                     }`}
                   >
-                    {sec.answered}/{sec.total}
-                  </span>
-                </button>
-              );
-            })}
+                    <span>
+                      {labelPart} ({sec.total} Qs)
+                    </span>
+                    <span
+                      className={`font-mono-tabular px-1.5 py-0.5 rounded text-[11px] ${
+                        isCurrentSection ? 'bg-slate-700 text-sky-300' : 'bg-slate-200/80 text-slate-700'
+                      }`}
+                    >
+                      {sec.answered}/{sec.total}
+                    </span>
+                  </button>
+                );
+              })}
+
+            {paletteSectionFilter !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => setPaletteSectionFilter('ALL')}
+                className="rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs font-semibold text-sky-900 hover:bg-sky-100 font-bengali"
+              >
+                {isBn ? 'সব বিষয় দেখাও (Show All)' : 'Show All Subjects'}
+              </button>
+            )}
           </div>
-          <div className="text-xs text-slate-600 font-bengali px-2">
-            {isGameMode
-              ? isBn
-                ? 'গেম নিয়ম: অপশন বেছে "উত্তর লক করো" চাপলে সাথে সাথে +100 XP, সঠিক উত্তর ও AI শিক্ষকের ভয়েস ব্যাখ্যা পাবে!'
-                : 'Game Arena: Lock your answer to win +100 XP, build combo streaks, and unlock AI Teacher explanations!'
-              : isBn
-                ? 'নির্দেশ: আসল WBPSC পরীক্ষার মতোই কোনো প্রশ্নের উত্তর জমা দেওয়ার আগে দেখানো হবে না।'
-                : 'Official Exam Mode: Answers & explanations are locked until final submission.'}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              data-testid="change-mock-subject-btn"
+              onClick={() => {
+                sessionStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+                setActiveSession(null);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-100 font-bengali"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-sky-700" />
+              <span>
+                {isBn
+                  ? 'বিষয় পরিবর্তন / নতুন মক সেটআপ (Change Subject)'
+                  : 'Change Subject / Mock Setup'}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -1768,12 +1832,12 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b-2 border-slate-900">
           <div>
             <div className="text-xs font-bold tracking-wider uppercase text-slate-700 font-mono-tabular">
-              WEST BENGAL PUBLIC SERVICE COMMISSION (WBPSC) · INTERACTIVE GAME & MOCK HALL
+              WEST BENGAL PUBLIC SERVICE COMMISSION (WBPSC) · ALL-SUBJECT GAME & MOCK HALL
             </div>
             <h2 className="mt-1 text-xl sm:text-2xl font-bold text-slate-900 font-bengali">
               {isBn
-                ? 'WBPSC ক্লার্কশিপ (Part-I) গেম মোড ও আসল ফরম্যাটে মক টেস্ট'
-                : 'WBPSC Clerkship Examination (Part-I) — Interactive Game Arena & Mock Test'}
+                ? 'WBPSC ক্লার্কশিপ (Part-I) সব বিষয়ের (GS · পাটিগণিত · ইংরেজি) গেম মোড ও মক টেস্ট'
+                : 'WBPSC Clerkship (Part-I) — All-Subject (General Studies · Arithmetic · English) Mock Test'}
             </h2>
           </div>
           <div className="flex items-center gap-3">
@@ -1783,8 +1847,9 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
             </div>
             <button
               type="button"
+              data-testid="start-mock-top-btn"
               disabled={loading}
-              onClick={handleStartMockTest}
+              onClick={() => handleStartMockTest()}
               className="inline-flex items-center gap-2 rounded-xl bg-sky-700 px-5 py-3 text-sm font-bold text-white hover:bg-sky-800 transition-colors font-bengali shadow-xs"
             >
               <Play className="w-4 h-4 fill-current shrink-0" />
@@ -1795,19 +1860,129 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
                     : 'Preparing Game...'
                   : isGameMode
                     ? isBn
-                      ? `এখনই ${customCount} নম্বরের ক্লার্কশিপ গেম শুরু করো (Start Game)`
-                      : `Start ${customCount}-Mark Exam Game Now`
+                      ? 'এখনই ক্লার্কশিপ মক গেম শুরু করো (Start Game)'
+                      : 'Start Clerkship Exam Game Now'
                     : isBn
-                      ? `এখনই ${customCount} নম্বরের মক টেস্ট শুরু করো`
-                      : `Start ${customCount}-Mark Mock Test Now`}
+                      ? 'এখনই মক টেস্ট শুরু করো (Start Mock Test)'
+                      : 'Start Mock Test Now'}
               </span>
             </button>
           </div>
         </div>
 
+        {/* STEP 1: Select WBPSC Subject & Question Order Mode (All Subjects vs Specific Subject) */}
+        <div className="mt-5" data-testid="mock-subject-scope-selector">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <label className="text-xs sm:text-sm font-bold text-slate-900 font-bengali">
+              {isBn
+                ? '১. মক টেস্টের বিষয় নির্বাচন করো (Choose WBPSC Clerkship Subject Mode — সব বিষয় একসাথে অথবা নির্দিষ্ট বিষয়):'
+                : '1. Choose WBPSC Clerkship Subject Mode (All Subjects Together or Specific Subject):'}
+            </label>
+            <span className="text-xs font-semibold text-sky-800 font-bengali">
+              {isBn
+                ? 'সিলেবাস: General Studies (40) + Arithmetic (30) + English (30) = 100 নম্বর'
+                : 'Syllabus: General Studies (40) + Arithmetic (30) + English (30) = 100 Marks'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+            {(
+              [
+                {
+                  id: 'ALL_MIXED',
+                  badge: 'ALL 3 SUBJECTS (MIXED)',
+                  titleBn: 'সব বিষয় একসাথে (GS + অঙ্ক + ইংরেজি মিক্সড)',
+                  titleEn: 'All Subjects Mixed (GS + Math + Eng)',
+                  descBn: 'Q1 সাধারণ জ্ঞান, Q2 পাটিগণিত, Q3 ইংরেজি—শুরু থেকেই সব বিষয়ের প্রশ্ন একসাথে!',
+                  descEn: 'Q1 General Studies, Q2 Arithmetic, Q3 English interleaved from Question 1!',
+                  defaultCount: 100,
+                },
+                {
+                  id: 'General Studies',
+                  badge: 'PART B · 40 MARKS',
+                  titleBn: 'সাধারণ জ্ঞান (General Studies — 40 নম্বর)',
+                  titleEn: 'General Studies Only (40 Marks)',
+                  descBn: 'ভারতের ইতিহাস, স্বাধীনতা আন্দোলন, সংবিধান, পশ্চিমবঙ্গের ভূগোল, বিজ্ঞান ও জিকে',
+                  descEn: 'Indian History, Freedom Struggle, Polity, WB Geography, Everyday Science & GK',
+                  defaultCount: 40,
+                },
+                {
+                  id: 'Arithmetic',
+                  badge: 'PART C · 30 MARKS',
+                  titleBn: 'পাটিগণিত / অঙ্ক (Arithmetic — 30 নম্বর)',
+                  titleEn: 'Arithmetic / Math Only (30 Marks)',
+                  descBn: 'শতকরা (Percentage), লাভ-ক্ষতি, সরল সুদ, অনুপাত, সময়-কার্য, গতিবেগ ও গড়',
+                  descEn: 'Percentage, Profit & Loss, Simple Interest, Ratio, Time & Work, Speed & Average',
+                  defaultCount: 30,
+                },
+                {
+                  id: 'English',
+                  badge: 'PART A · 30 MARKS',
+                  titleBn: 'ইংরেজি (General English — 30 নম্বর)',
+                  titleEn: 'English Only (30 Marks)',
+                  descBn: 'Preposition, Voice Change, Narration, Synonym-Antonym, Idioms ও Grammar',
+                  descEn: 'Prepositions, Voice, Narration, Synonyms/Antonyms, Idioms & Sentence Correction',
+                  defaultCount: 30,
+                },
+                {
+                  id: 'ALL_BOOKLET',
+                  badge: 'OFFICIAL BOOKLET ORDER',
+                  titleBn: 'সব বিষয় (আসল বুকলেট ক্রম: Part A · B · C)',
+                  titleEn: 'All Subjects (Official Booklet Order)',
+                  descBn: 'প্রথমে Part A English (1-30), তারপর Part B GS (31-70), শেষে Part C Math (71-100)',
+                  descEn: 'Grouped by Part A English (Q1–30), Part B GS (Q31–70), Part C Math (Q71–100)',
+                  defaultCount: 100,
+                },
+              ] as const
+            ).map((item) => {
+              const isSelected = mockSubjectScope === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  data-testid={`mock-scope-${item.id}`}
+                  onClick={() => {
+                    setMockSubjectScope(item.id);
+                    setCustomCount(item.defaultCount);
+                  }}
+                  className={`rounded-xl border p-3.5 text-left transition-all flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-sky-700 bg-sky-50/90 ring-2 ring-sky-700'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <div>
+                    <div className="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 font-mono-tabular">
+                      {item.badge}
+                    </div>
+                    <div className="mt-1 text-xs sm:text-sm font-bold text-slate-900 font-bengali">
+                      {isBn ? item.titleBn : item.titleEn}
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-600 font-bengali leading-relaxed">
+                      {isBn ? item.descBn : item.descEn}
+                    </p>
+                  </div>
+                  <div className="mt-2.5 pt-2 border-t border-slate-200/70 flex items-center justify-between text-[11px] font-bold text-sky-900 font-bengali">
+                    <span>{isSelected ? (isBn ? '✓ নির্বাচিত' : '✓ Selected') : (isBn ? 'নির্বাচন করো' : 'Select')}</span>
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStartMockTest(item.id, item.defaultCount);
+                      }}
+                      className="underline hover:text-sky-700 cursor-pointer"
+                    >
+                      {isBn ? 'এখনই শুরু →' : 'Start Now →'}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Interactive Game Mode vs Strict Exam Hall Selector */}
         <div
-          className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3"
+          className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3"
           data-testid="exam-experience-mode-selector"
         >
           <button
@@ -1887,7 +2062,7 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
           </div>
           <div>
             <span className="text-slate-500">পূর্ণমান (Full Marks): </span>
-            <strong className="font-mono-tabular text-slate-900">100 (100 MCQs)</strong>
+            <strong className="font-mono-tabular text-slate-900">100 (GS 40 + Math 30 + Eng 30)</strong>
           </div>
           <div>
             <span className="text-slate-500">নির্ধারিত সময় (Time Allowed): </span>
@@ -1923,8 +2098,8 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
               </li>
               <li>
                 {isBn
-                  ? 'প্রশ্নপত্রটি তিনটি বিভাগে বিভক্ত: Part A: English (প্রশ্ন ১–৩০, ৩০ নম্বর), Part B: General Studies (প্রশ্ন ৩১–৭০, ৪০ নম্বর), এবং Part C: Arithmetic (প্রশ্ন ৭১–১০০, ৩০ নম্বর)।'
-                  : 'The paper is divided into three sections: Part A: English (Q1–30, 30 Marks), Part B: General Studies (Q31–70, 40 Marks), and Part C: Arithmetic (Q71–100, 30 Marks).'}
+                  ? 'প্রশ্নপত্রটি তিনটি বিষয়ে বিভক্ত: Part A: English (৩০ নম্বর), Part B: General Studies (৪০ নম্বর — ইতিহাস, সংবিধান, ভূগোল, বিজ্ঞান ও কারেন্ট অ্যাফেয়ার্স), এবং Part C: Arithmetic (৩০ নম্বর — মাধ্যমিক মানের পাটিগণিত)।'
+                  : 'The paper covers three official subjects: Part A: English (30 Marks), Part B: General Studies (40 Marks), and Part C: Arithmetic (30 Marks).'}
               </li>
               <li>
                 {isBn
@@ -1933,8 +2108,8 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
               </li>
               <li>
                 {isBn
-                  ? 'আসল পরীক্ষার প্রশ্নপত্রের মতোই English বিভাগের প্রশ্ন কেবল ইংরেজিতে এবং General Studies ও Arithmetic বিভাগের প্রশ্ন ইংরেজি ও বাংলা উভয় ভাষাতেই থাকবে। পরীক্ষা জমা দেওয়ার পর প্রতিটি প্রশ্নের সহজ বাংলা ব্যাখ্যা দেখা যাবে।'
-                  : 'Following the authentic WBPSC question booklet format, English questions appear in English while General Studies and Arithmetic questions appear bilingually in English and Bengali.'}
+                  ? 'প্রতিটি প্রশ্ন ইংরেজি ও বাংলা উভয় ভাষাতেই থাকবে এবং উত্তর লক করলেই সঠিক উত্তর, কেন সঠিক এবং মনে রাখার সহজ শর্টকাট ট্রিক (Shortcut Trick) দেখা যাবে।'
+                  : 'All questions appear bilingually in English and Bengali with instant step-by-step explanations and shortcut tricks.'}
               </li>
             </ul>
           </div>
@@ -1950,28 +2125,28 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500">
                   <th className="py-1.5 font-semibold">{isBn ? 'বিভাগ (Subject)' : 'Section'}</th>
-                  <th className="py-1.5 font-semibold">{isBn ? 'প্রশ্ন ক্রমিক' : 'Q. Range'}</th>
+                  <th className="py-1.5 font-semibold">{isBn ? 'প্রশ্ন সংখ্যা' : 'Questions'}</th>
                   <th className="py-1.5 font-semibold text-right">{isBn ? 'নম্বর' : 'Marks'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/70 font-mono-tabular">
                 <tr>
-                  <td className="py-2 font-semibold text-slate-900">Part A: English</td>
-                  <td className="py-2 text-slate-600">Q. 1 – Q. 30</td>
-                  <td className="py-2 text-right font-bold text-slate-900">30</td>
-                </tr>
-                <tr>
-                  <td className="py-2 font-semibold text-slate-900">Part B: General Studies</td>
-                  <td className="py-2 text-slate-600">Q. 31 – Q. 70</td>
+                  <td className="py-2 font-semibold text-slate-900">Part B: General Studies (GK/GS)</td>
+                  <td className="py-2 text-slate-600">40 MCQs</td>
                   <td className="py-2 text-right font-bold text-slate-900">40</td>
                 </tr>
                 <tr>
-                  <td className="py-2 font-semibold text-slate-900">Part C: Arithmetic</td>
-                  <td className="py-2 text-slate-600">Q. 71 – Q. 100</td>
+                  <td className="py-2 font-semibold text-slate-900">Part C: Arithmetic (Math)</td>
+                  <td className="py-2 text-slate-600">30 MCQs</td>
+                  <td className="py-2 text-right font-bold text-slate-900">30</td>
+                </tr>
+                <tr>
+                  <td className="py-2 font-semibold text-slate-900">Part A: General English</td>
+                  <td className="py-2 text-slate-600">30 MCQs</td>
                   <td className="py-2 text-right font-bold text-slate-900">30</td>
                 </tr>
                 <tr className="bg-slate-200/50 font-bold text-slate-900">
-                  <td className="py-2 pl-1">Total (মোট)</td>
+                  <td className="py-2 pl-1">Total (মোট ৩টি বিষয়)</td>
                   <td className="py-2">100 MCQs</td>
                   <td className="py-2 text-right pr-1">100 Marks</td>
                 </tr>
@@ -1980,37 +2155,42 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
           </div>
         </div>
 
-        {/* Step 2: Select Uniqueness Mode & Question Count (Default: 100 MCQs Full WBPSC Exam) */}
+        {/* Step 2: Select Uniqueness Mode & Question Count */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 pt-5 border-t border-slate-200">
           <div>
             <label className="block text-xs font-semibold text-slate-700 font-bengali mb-2">
               {isBn
-                ? 'মক টেস্টের প্রশ্নপত্রের দৈর্ঘ্য (ডিফল্ট: আসল ১০০ নম্বরের পূর্ণাঙ্গ পরীক্ষা)'
-                : 'Select Mock Paper Length (Default: Full 100-Mark Official WBPSC Format)'}
+                ? '২. মক টেস্টের প্রশ্নপত্রের দৈর্ঘ্য (Select Question Count)'
+                : '2. Select Mock Paper Length'}
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {[
                 {
                   count: 100,
-                  labelBn: '১০০টি প্রশ্ন · ৯০ মিনিট (আসল WBPSC পূর্ণাঙ্গ পরীক্ষা)',
-                  labelEn: '100 Qs · 90 Mins (Full WBPSC Exam)',
+                  labelBn: '১০০টি প্রশ্ন (পূর্ণাঙ্গ)',
+                  labelEn: '100 Qs (Full)',
+                },
+                {
+                  count: 40,
+                  labelBn: '৪০টি প্রশ্ন (GS সেট)',
+                  labelEn: '40 Qs (GS Set)',
                 },
                 {
                   count: 30,
-                  labelBn: '৩০টি প্রশ্ন · ২৭ মিনিট (অর্ধ-পূর্ণ অনুশীলন)',
-                  labelEn: '30 Qs · 27 Mins (Sectional Set)',
+                  labelBn: '৩০টি প্রশ্ন (অর্ধ-পূর্ণ)',
+                  labelEn: '30 Qs (Section)',
                 },
                 {
                   count: 15,
-                  labelBn: '১৫টি প্রশ্ন · ১৫ মিনিট (দ্রুত মিনি মক)',
-                  labelEn: '15 Qs · 15 Mins (Mini Mock)',
+                  labelBn: '১৫টি প্রশ্ন (মিনি মক)',
+                  labelEn: '15 Qs (Mini)',
                 },
               ].map((opt) => (
                 <button
                   key={opt.count}
                   type="button"
                   onClick={() => setCustomCount(opt.count)}
-                  className={`rounded-lg border p-3 text-left transition-colors ${
+                  className={`rounded-lg border p-2.5 text-left transition-colors ${
                     customCount === opt.count
                       ? 'border-sky-700 bg-sky-50 text-sky-950 font-semibold ring-1 ring-sky-700'
                       : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -2028,8 +2208,8 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
           <div>
             <label className="block text-xs font-semibold text-slate-700 font-bengali mb-2">
               {isBn
-                ? 'প্রশ্ন চয়নের নিয়ম (Non-Repetition & Uniqueness Mode)'
-                : 'Question Uniqueness & Non-Repetition Mode'}
+                ? '৩. প্রশ্ন চয়নের নিয়ম (Non-Repetition & Uniqueness Mode)'
+                : '3. Question Uniqueness & Non-Repetition Mode'}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {(
@@ -2091,7 +2271,7 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
                   : `Verified Official WBPSC Rules (${selectedConfig.examinationName}):`}
               </div>
               <div>
-                English: 30 Marks (Q1–Q30) · General Studies: 40 Marks (Q31–Q70) · Arithmetic: 30 Marks (Q71–Q100) · সঠিক উত্তরে +1 · ভুল উত্তরে -0.25 নেগেটিভ মার্কিং।
+                General Studies: 40 Marks · Arithmetic: 30 Marks · English: 30 Marks · সঠিক উত্তরে +1 · ভুল উত্তরে -0.25 নেগেটিভ মার্কিং।
               </div>
               <label className="mt-2 inline-flex items-center gap-2 cursor-pointer text-sky-900 font-semibold">
                 <input
@@ -2112,8 +2292,9 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
 
           <button
             type="button"
+            data-testid="start-mock-bottom-btn"
             disabled={loading}
-            onClick={handleStartMockTest}
+            onClick={() => handleStartMockTest()}
             className="inline-flex items-center gap-2 rounded-xl bg-sky-700 px-6 py-3.5 text-sm font-bold text-white hover:bg-sky-800 transition-colors font-bengali shadow-xs"
           >
             <Play className="w-4 h-4 fill-current shrink-0" />

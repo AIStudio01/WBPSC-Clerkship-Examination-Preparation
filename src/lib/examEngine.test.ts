@@ -316,10 +316,32 @@ test('englishGameEngine evaluates combo multipliers, XP ranks, 50:50 lifelines, 
   assert.equal(fatalTurn.newHearts, 0);
   assert.equal(fatalTurn.isGameOver, true);
 
-  // World question deck selection returns English questions only
+  // World question deck selection returns English questions only for WORLD_1_PREPOSITION
   const prepDeck = selectQuestionsForEnglishWorld(INITIAL_QUESTIONS_POOL, 'WORLD_1_PREPOSITION');
   assert.equal(prepDeck.length, 8);
   assert.equal(prepDeck.every((q) => q.subject === 'English'), true);
+
+  // World question deck selection returns General Studies questions for WORLD_6_GS_HISTORY
+  const gsDeck = selectQuestionsForEnglishWorld(INITIAL_QUESTIONS_POOL, 'WORLD_6_GS_HISTORY');
+  assert.equal(gsDeck.length, 10);
+  assert.equal(gsDeck.every((q) => q.subject === 'General Studies'), true);
+
+  // World question deck selection returns Arithmetic questions for WORLD_10_ARITH_PERCENT_PROFIT
+  const arithDeck = selectQuestionsForEnglishWorld(INITIAL_QUESTIONS_POOL, 'WORLD_10_ARITH_PERCENT_PROFIT');
+  assert.equal(arithDeck.length, 10);
+  assert.equal(arithDeck.every((q) => q.subject === 'Arithmetic'), true);
+
+  // All-Subject Mega Boss Raid interleaves General Studies, Arithmetic, and English right from Q1-Q3
+  const megaBossDeck = selectQuestionsForEnglishWorld(INITIAL_QUESTIONS_POOL, 'WORLD_12_ALL_SUBJECT_MEGA_BOSS');
+  assert.equal(megaBossDeck.length, 15);
+  const subjectsInMega = new Set(megaBossDeck.map((q) => q.subject));
+  assert.equal(subjectsInMega.has('General Studies'), true);
+  assert.equal(subjectsInMega.has('Arithmetic'), true);
+  assert.equal(subjectsInMega.has('English'), true);
+  assert.equal(megaBossDeck[0].subject, 'General Studies');
+  assert.equal(megaBossDeck[1].subject, 'Arithmetic');
+  assert.equal(megaBossDeck[2].subject, 'English');
 });
+
 
 

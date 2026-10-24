@@ -531,8 +531,8 @@ export default function App() {
     icon: React.FC<{ className?: string }>;
   }[] = [
     { id: 'DASHBOARD', labelBn: '১. ড্যাশবোর্ড', labelEn: '1. Dashboard', icon: LayoutDashboard },
-    { id: 'ENGLISH_GAME', labelBn: '🎮 ইংরেজি শেখার গেম (English Game)', labelEn: '🎮 English Learning Game', icon: Gamepad2 },
-    { id: 'MOCK_TEST', labelBn: '২. মক টেস্ট শুরু করো', labelEn: '2. Start Mock Test', icon: Play },
+    { id: 'ENGLISH_GAME', labelBn: '🎮 সব বিষয়ের গেম (All-Subject Game)', labelEn: '🎮 All-Subject Clerkship Game', icon: Gamepad2 },
+    { id: 'MOCK_TEST', labelBn: '২. মক টেস্ট (GS · অঙ্ক · ইংরেজি)', labelEn: '2. Mock Test (All Subjects)', icon: Play },
     { id: 'PYQ', labelBn: '৩. বিগত বছরের প্রশ্ন (PYQ)', labelEn: '3. Previous-Year Questions', icon: FileQuestion },
     { id: 'SUBJECT_PRACTICE', labelBn: '৪. বিষয়ভিত্তিক অনুশীলন', labelEn: '4. Subject Practice', icon: BookOpen },
     { id: 'TOPIC_PRACTICE', labelBn: '৫. অধ্যায়ভিত্তিক অনুশীলন', labelEn: '5. Topic Practice', icon: Compass },
@@ -593,7 +593,7 @@ export default function App() {
               activeNav === 'ENGLISH_GAME' ? 'text-slate-900 font-semibold underline underline-offset-8' : ''
             }`}
           >
-            {isBn ? 'ইংরেজি শেখার গেম' : 'English Game'}
+            {isBn ? 'সব বিষয়ের গেম' : 'All-Subject Game'}
           </button>
           <button
             type="button"
@@ -745,7 +745,7 @@ export default function App() {
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                   <div className="max-w-2xl">
                     <div className="text-xs font-medium text-sky-700">
-                      WBPSC Clerkship Examination Preparation (Advt. No. 13/2023 Official Scheme · Part-I & Part-II)
+                      WBPSC Clerkship Examination Preparation (Advt. No. 13/2023 Official Scheme · All 3 Subjects: GS 40 + Math 30 + Eng 30)
                     </div>
                     <h1 className="mt-1.5 text-2xl sm:text-3xl font-bold text-slate-900 font-bengali text-balance">
                       {isBn
@@ -754,8 +754,8 @@ export default function App() {
                     </h1>
                     <p className="mt-2 text-sm text-slate-600 font-bengali leading-relaxed">
                       {isBn
-                        ? 'শুধু উত্তর মুখস্থ নয়—প্রতিটি প্রশ্নের পেছনের মূল নিয়ম সহজ বাংলায় বোঝো, নিজের ভুল খাতা (Mistake Notebook) থেকে শেখো এবং প্রতিদিন নতুন প্রশ্নে মক টেস্ট দাও।'
-                        : 'Go beyond memorizing answer keys—understand every concept in simple Bengali or English, learn from your Mistake Notebook, and take non-repeating mock tests.'}
+                        ? 'সাধারণ জ্ঞান (General Studies — ৪০ নম্বর), পাটিগণিত (Arithmetic — ৩০ নম্বর) এবং ইংরেজি (English — ৩০ নম্বর)—ডব্লিউবিপিএসসি ক্লার্কশিপের সব বিষয়ের প্রশ্ন বাংলা ও ইংরেজি দুটোতেই শর্টকাট ট্রিকসহ অনুশীলন করো!'
+                        : 'Practice all 3 official WBPSC Clerkship subjects—General Studies (40 Marks), Arithmetic (30 Marks), and English (30 Marks)—bilingually with shortcut tricks!'}
                     </p>
                   </div>
 
@@ -769,8 +769,8 @@ export default function App() {
                       <Gamepad2 className="w-4 h-4 shrink-0" />
                       <span>
                         {isBn
-                          ? 'ইংরেজি শেখার গেম খেলো (Play English Game)'
-                          : 'Play English Learning Game'}
+                          ? 'সব বিষয়ের ক্লার্কশিপ গেম খেলো (Play All-Subject Game)'
+                          : 'Play All-Subject Clerkship Game'}
                       </span>
                     </button>
 
@@ -782,8 +782,8 @@ export default function App() {
                       <Play className="w-4 h-4 text-sky-700 fill-current shrink-0" />
                       <span>
                         {isBn
-                          ? 'নতুন AI মক টেস্ট (Start Mock Test)'
-                          : 'Start AI Mock Test'}
+                          ? 'সব বিষয়ের মক টেস্ট (All-Subject Mock Test)'
+                          : 'Start All-Subject Mock Test'}
                       </span>
                     </button>
                   </div>
@@ -847,6 +847,123 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Official 3-Subject WBPSC Clerkship Quick Launch Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="dashboard-subject-hub">
+                <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="text-xs font-extrabold uppercase tracking-wider text-sky-700 font-mono-tabular">
+                      PART B · 40 MARKS (40 MCQs)
+                    </div>
+                    <h3 className="mt-1 text-base sm:text-lg font-bold text-slate-900 font-bengali">
+                      {isBn
+                        ? 'সাধারণ জ্ঞান (General Studies — ৪০ নম্বর)'
+                        : 'Part B: General Studies (40 Marks)'}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-600 font-bengali leading-relaxed">
+                      {isBn
+                        ? 'ভারতের ইতিহাস ও স্বাধীনতা আন্দোলন, ভারতের সংবিধান, পশ্চিমবঙ্গ ও ভারতের ভূগোল, দৈনন্দিন বিজ্ঞান এবং কারেন্ট অ্যাফেয়ার্স।'
+                        : 'Indian History & Freedom Movement, Indian Polity, Geography of India & WB, Everyday Science & Current Affairs.'}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPracticeSubjectFilter('General Studies');
+                        setPracticeTopicFilter('ALL');
+                        setActiveNav('SUBJECT_PRACTICE');
+                      }}
+                      className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors font-bengali text-center"
+                    >
+                      {isBn ? 'GS অনুশীলন করো' : 'Practice GS'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveNav('MOCK_TEST')}
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 transition-colors font-bengali"
+                    >
+                      {isBn ? 'GS মক টেস্ট' : 'GS Mock'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="text-xs font-extrabold uppercase tracking-wider text-emerald-700 font-mono-tabular">
+                      PART C · 30 MARKS (30 MCQs)
+                    </div>
+                    <h3 className="mt-1 text-base sm:text-lg font-bold text-slate-900 font-bengali">
+                      {isBn
+                        ? 'পাটিগণিত / অঙ্ক (Arithmetic — ৩০ নম্বর)'
+                        : 'Part C: Arithmetic / Math (30 Marks)'}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-600 font-bengali leading-relaxed">
+                      {isBn
+                        ? 'শতকরা (Percentage), লাভ ও ক্ষতি, সরল ও চক্রবৃদ্ধি সুদ, অনুপাত-সমানুপাত, সময় ও কার্য, সময় ও দূরত্ব এবং ল.সা.গু-গ.সা.গু।'
+                        : 'Madhyamik standard: Percentage, Profit & Loss, Simple Interest, Ratio, Time & Work, Speed & Distance, Average & LCM/HCF.'}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPracticeSubjectFilter('Arithmetic');
+                        setPracticeTopicFilter('ALL');
+                        setActiveNav('SUBJECT_PRACTICE');
+                      }}
+                      className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors font-bengali text-center"
+                    >
+                      {isBn ? 'পাটিগণিত অনুশীলন' : 'Practice Math'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveNav('MOCK_TEST')}
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 transition-colors font-bengali"
+                    >
+                      {isBn ? 'অঙ্ক মক টেস্ট' : 'Math Mock'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="text-xs font-extrabold uppercase tracking-wider text-amber-700 font-mono-tabular">
+                      PART A · 30 MARKS (30 MCQs)
+                    </div>
+                    <h3 className="mt-1 text-base sm:text-lg font-bold text-slate-900 font-bengali">
+                      {isBn
+                        ? 'ইংরেজি (General English — ৩০ নম্বর)'
+                        : 'Part A: General English (30 Marks)'}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-600 font-bengali leading-relaxed">
+                      {isBn
+                        ? 'Prepositions, Articles, Voice Change, Narration, Synonyms & Antonyms, Idioms, Phrasal Verbs, Spelling ও Sentence Correction।'
+                        : 'Prepositions, Voice Change, Narration, Synonyms/Antonyms, Idioms, Phrasal Verbs, Tense & Error Spotting.'}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPracticeSubjectFilter('English');
+                        setPracticeTopicFilter('ALL');
+                        setActiveNav('SUBJECT_PRACTICE');
+                      }}
+                      className="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors font-bengali text-center"
+                    >
+                      {isBn ? 'ইংরেজি অনুশীলন' : 'Practice English'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveNav('MOCK_TEST')}
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 transition-colors font-bengali"
+                    >
+                      {isBn ? 'ইংরেজি মক টেস্ট' : 'English Mock'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Quick Action Modules Row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <button
@@ -863,15 +980,15 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    setPracticeSubjectFilter('English');
-                    setPracticeTopicFilter('Voice Change & Narration');
+                    setPracticeSubjectFilter('ALL');
+                    setPracticeTopicFilter('ALL');
                     setActiveNav('TOPIC_PRACTICE');
                   }}
                   className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-sky-400 transition-colors"
                 >
                   <div className="text-xs font-medium text-amber-700">Adaptive Focus</div>
                   <div className="mt-1 text-sm font-bold text-slate-900 font-bengali">
-                    {isBn ? 'দুর্বল অধ্যায় অনুশীলন (Practice Weak Topics)' : 'Practice Weak Topics'}
+                    {isBn ? 'সব বিষয়ের অধ্যায় অনুশীলন (Topic Practice)' : 'Practice All Subject Topics'}
                   </div>
                 </button>
 

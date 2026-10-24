@@ -51,7 +51,7 @@ html.dark,
   }
 
   .font-mono-tabular {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'IBM Plex Mono', 'Hind Siliguri', monospace;
     font-variant-numeric: tabular-nums;
   }
 }

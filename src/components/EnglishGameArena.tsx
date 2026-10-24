@@ -139,8 +139,11 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
     autoStartWorld ? 'PLAYING' : 'TITLE_MENU'
   );
   const [selectedWorldId, setSelectedWorldId] = useState<GameWorldId>(
-    autoStartWorld || 'WORLD_1_PREPOSITION'
+    autoStartWorld || 'WORLD_12_ALL_SUBJECT_MEGA_BOSS'
   );
+  const [worldSubjectFilter, setWorldSubjectFilter] = useState<
+    'ALL_QUESTS' | 'ALL' | 'General Studies' | 'Arithmetic' | 'English'
+  >('ALL_QUESTS');
   const [difficultyMode, setDifficultyMode] = useState<GameDifficultyMode>('CHILL_LEARN');
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
 
@@ -172,6 +175,11 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
       ENGLISH_GAME_WORLDS[0],
     [selectedWorldId]
   );
+
+  const visibleWorlds = useMemo(() => {
+    if (worldSubjectFilter === 'ALL_QUESTS') return ENGLISH_GAME_WORLDS;
+    return ENGLISH_GAME_WORLDS.filter((w) => w.subjectCategory === worldSubjectFilter);
+  }, [worldSubjectFilter]);
 
   const questDeck = useMemo(
     () => selectQuestionsForEnglishWorld(questions, selectedWorldId),
@@ -321,7 +329,7 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-sky-700">
-                  WBPSC English Game Mode
+                  WBPSC All-Subject Game Arena (GS · Math · English)
                 </span>
                 <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900 font-mono-tabular">
                   {totalXp} XP
@@ -411,17 +419,17 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
               <div className="space-y-2 max-w-2xl">
                 <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-800">
                   <Gamepad2 className="w-4 h-4" />
-                  <span>Learn WBPSC Part-I English (30 Marks) Like a Game</span>
+                  <span>All WBPSC Clerkship Part-I Subjects (100 Marks: GS 40 · Math 30 · English 30)</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-bengali">
                   {isBn
-                    ? 'খেলার ছলে ইংরেজি জয় করো — WBPSC English Quest Arena!'
-                    : 'Play, Level Up & Master WBPSC Clerkship English Like a Game!'}
+                    ? 'খেলার ছলে ডব্লিউবিপিএসসি ক্লার্কশিপের সব বিষয় জয় করো — All-Subject Quest Arena!'
+                    : 'Play, Level Up & Master All WBPSC Clerkship Subjects Like a Game!'}
                 </h2>
                 <p className="text-sm text-slate-700 font-bengali leading-relaxed">
                   {isBn
-                    ? 'মুখস্থ করার বোরিং চাপ আর নয়! প্রতিটি লেভেলে বাংলা ও ইংরেজি দুটোতেই প্রশ্ন থাকবে, শর্টকাট ট্রিক পাওয়ার-আপ (Power-Up) দিয়ে নিজে উত্তর খোঁজো, কম্বো স্ট্রিক (Combo Streak) তৈরি করে বসকে হারাও এবং ভুল হলে সাথে সাথে ৩-সেকেন্ডের ট্রিক শিখে নাও!'
-                    : 'Turn WBPSC English grammar & vocabulary into an arcade adventure! Use 50:50 & Shortcut Trick Scrolls, build Combo multipliers, defeat Grammar Bosses, and learn instant bilingual tricks on every card.'}
+                    ? 'শুধু ইংরেজি নয়—এখন সাধারণ জ্ঞান (General Studies: ইতিহাস, সংবিধান, ভূগোল, বিজ্ঞান — ৪০ নম্বর), পাটিগণিত (Arithmetic: শতকরা, লাভ-ক্ষতি, সুদকষা, সময়-কার্য — ৩০ নম্বর) এবং ইংরেজি (English — ৩০ নম্বর) সব বিষয় খেলার ছলে জয় করো!'
+                    : 'Master every WBPSC Clerkship subject! Play quests across General Studies (History, Polity, WB Geography, Science — 40 Marks), Arithmetic (Percentage, Profit-Loss, SI, Time-Work — 30 Marks), and English (30 Marks).'}
                 </p>
               </div>
 
@@ -435,7 +443,7 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
                   <Play className="w-5 h-5 fill-current" />
                   <span>
                     {isBn
-                      ? 'এখনই গেম শুরু করো (Play Selected Quest)'
+                      ? 'এখনই সব বিষয়ের গেম শুরু করো (Play Selected Quest)'
                       : 'Play Selected Quest Now'}
                   </span>
                 </button>
@@ -448,12 +456,12 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
                 <Zap className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-xs font-bold text-slate-900 font-bengali">
-                    {isBn ? '১. কম্বো স্ট্রিক ও XP র‍্যাঙ্ক (Combo & XP)' : '1. Combo Streaks & XP Ranks'}
+                    {isBn ? '১. সব বিষয় (GS 40 + Math 30 + Eng 30)' : '1. All 3 Official WBPSC Subjects'}
                   </div>
                   <p className="text-xs text-slate-600 font-bengali mt-0.5">
                     {isBn
-                      ? 'পরপর সঠিক উত্তর দিলে 1.5x, 2x ও 3x মেগা XP বোনাস এবং বস ড্যামেজ!'
-                      : 'Chain consecutive right answers for 1.5x, 2x, and 3x XP multipliers.'}
+                      ? 'ইতিহাস, সংবিধান, ভূগোল, বিজ্ঞান, পাটিগণিত ও ইংরেজি—১২টি লেভেলে সম্পূর্ণ সিলেবাস!'
+                      : '12 quests covering History, Polity, WB Geography, Science, Arithmetic & English.'}
                   </p>
                 </div>
               </div>
@@ -488,9 +496,61 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
             </div>
           </div>
 
-          {/* 5 Quest World Cards Grid */}
+          {/* Subject Filter Bar for Game World Map */}
+          <div
+            className="rounded-xl border border-slate-200 bg-white p-3 flex flex-wrap items-center justify-between gap-3"
+            data-testid="game-world-subject-filter"
+          >
+            <div className="text-xs font-bold text-slate-800 font-bengali">
+              {isBn
+                ? 'বিষয় অনুযায়ী গেম লেভেল বেছে নাও (Filter Quests by WBPSC Subject):'
+                : 'Filter Game Quests by WBPSC Clerkship Subject:'}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {(
+                [
+                  {
+                    id: 'ALL_QUESTS',
+                    labelBn: 'সব ১২টি অভিযান (All 12 Quests)',
+                    labelEn: 'All 12 Quests',
+                  },
+                  {
+                    id: 'General Studies',
+                    labelBn: 'Part B: সাধারণ জ্ঞান / GS (40 নম্বর · ৪টি লেভেল)',
+                    labelEn: 'Part B: General Studies (40M · 4 Quests)',
+                  },
+                  {
+                    id: 'Arithmetic',
+                    labelBn: 'Part C: পাটিগণিত / Math (30 নম্বর · ২টি লেভেল)',
+                    labelEn: 'Part C: Arithmetic (30M · 2 Quests)',
+                  },
+                  {
+                    id: 'English',
+                    labelBn: 'Part A: ইংরেজি / English (30 নম্বর · ৫টি লেভেল)',
+                    labelEn: 'Part A: English (30M · 5 Quests)',
+                  },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  data-testid={`game-subject-tab-${tab.id}`}
+                  onClick={() => setWorldSubjectFilter(tab.id)}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors font-bengali ${
+                    worldSubjectFilter === tab.id
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {isBn ? tab.labelBn : tab.labelEn}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 12 Quest World Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ENGLISH_GAME_WORLDS.map((world) => {
+            {visibleWorlds.map((world) => {
               const isCleared = clearedWorlds.includes(world.id);
               const isSelected = selectedWorldId === world.id;
               return (
@@ -506,7 +566,7 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
                   <div>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold uppercase tracking-wider text-sky-700 font-mono-tabular">
-                        STAGE {world.stageNumber} · {world.questionCount} CARDS
+                        STAGE {world.stageNumber} · {world.subjectCategory === 'ALL' ? 'ALL 3 SUBJECTS' : world.subjectCategory.toUpperCase()} · {world.questionCount} CARDS
                       </span>
                       {isCleared ? (
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
@@ -740,11 +800,11 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-slate-900">
-                  CARD #{currentIndex + 1} · {currentQuestion.topic}
+                  CARD #{currentIndex + 1} · {currentQuestion.subject}
                 </span>
                 <span>·</span>
-                <span className="text-sky-700 font-medium">
-                  {currentQuestion.subtopic || 'WBPSC Clerkship Part-I English'}
+                <span className="text-sky-700 font-semibold">
+                  {currentQuestion.topic}
                 </span>
               </div>
               <span className="font-mono-tabular">
@@ -756,7 +816,7 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
             <div className="space-y-3" data-testid="game-bilingual-stem">
               <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  English Question Card
+                  English Version ({currentQuestion.subject})
                 </div>
                 <div className="text-base sm:text-lg font-bold text-slate-900 leading-relaxed">
                   {currentQuestion.questionTextEn || currentQuestion.questionText}
