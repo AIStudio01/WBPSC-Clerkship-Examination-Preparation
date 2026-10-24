@@ -38,7 +38,7 @@ interface EnglishGameArenaProps {
   onRecordPracticeAttempt: (
     question: QuestionItem,
     selectedOption: OptionKey,
-    timeSpentSeconds: number
+    isCorrect: boolean
   ) => void;
   autoStartWorld?: GameWorldId;
 }
@@ -250,7 +250,7 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
       playGameSound('miss', soundEnabled);
     }
 
-    onRecordPracticeAttempt(currentQuestion, opt, 15);
+    onRecordPracticeAttempt(currentQuestion, opt, evalResult.isCorrect);
     setGameState('ANSWER_REVEALED');
   };
 
@@ -819,7 +819,7 @@ export const EnglishGameArena: React.FC<EnglishGameArenaProps> = ({
                   English Version ({currentQuestion.subject})
                 </div>
                 <div className="text-base sm:text-lg font-bold text-slate-900 leading-relaxed">
-                  {currentQuestion.questionTextEn || currentQuestion.questionText}
+                  {currentQuestion.questionText}
                 </div>
               </div>
 

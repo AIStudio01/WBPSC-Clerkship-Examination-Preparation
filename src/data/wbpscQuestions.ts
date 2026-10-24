@@ -1410,7 +1410,7 @@ const RAW_QUESTIONS: RawQuestionSeed[] = [
   },
 ];
 
-export const INITIAL_QUESTIONS_POOL: QuestionItem[] = RAW_QUESTIONS.map((seed) => ({
+export const INITIAL_QUESTIONS_POOL: QuestionItem[] = RAW_QUESTIONS.map((seed): QuestionItem => ({
   id: seed.id,
   questionOrigin: seed.questionOrigin,
   sourceDocumentId: seed.sourceDocumentId,

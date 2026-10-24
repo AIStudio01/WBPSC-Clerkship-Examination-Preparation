@@ -6,8 +6,8 @@ import {
   MockTestSession,
   OptionKey,
   PracticeUniquenessMode,
+  QuestionItem,
   StudentQuestionResponse,
-  WBPSCQuestion,
 } from '../types/exam';
 import { ChildFriendlyTeacherCard } from './ChildFriendlyTeacherCard';
 import {
@@ -43,7 +43,7 @@ interface GameQuestionOutcome {
   marksDelta: number;
   xpDelta: number;
   shieldUsed: boolean;
-  fullQuestion: WBPSCQuestion;
+  fullQuestion: QuestionItem;
 }
 
 interface MockExamSimulatorProps {

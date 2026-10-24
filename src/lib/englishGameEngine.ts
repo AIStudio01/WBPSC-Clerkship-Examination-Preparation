@@ -398,7 +398,7 @@ export function selectQuestionsForEnglishWorld(
   }
 
   const matched = subjectPool.filter((q) => {
-    const haystack = `${q.topic} ${q.subtopic || ''} ${q.questionTextEn || q.questionText} ${q.questionTextBn || ''}`.toLowerCase();
+    const haystack = `${q.topic} ${q.subtopic || ''} ${q.questionText} ${q.questionTextBn || ''}`.toLowerCase();
     return world.topicKeywords.some((kw) => haystack.includes(kw.toLowerCase()));
   });
 

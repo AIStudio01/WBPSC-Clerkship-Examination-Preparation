@@ -29,6 +29,55 @@
           if (typeof Window !== 'undefined' && Window.prototype) {
             ensureWritableFetch(Window.prototype);
           }
+
+          var NativeWebSocket = window.WebSocket;
+          if (typeof NativeWebSocket === 'function') {
+            var PatchedWebSocket = function (url, protocols) {
+              var isViteHmr =
+                protocols === 'vite-hmr' ||
+                (Array.isArray(protocols) && protocols.indexOf('vite-hmr') !== -1) ||
+                (typeof url === 'string' && url.indexOf('token=') !== -1);
+              if (isViteHmr) {
+                var target = typeof EventTarget !== 'undefined' ? new EventTarget() : {};
+                return {
+                  url: String(url || ''),
+                  readyState: 1,
+                  protocol: 'vite-hmr',
+                  extensions: '',
+                  bufferedAmount: 0,
+                  binaryType: 'blob',
+                  CONNECTING: 0,
+                  OPEN: 1,
+                  CLOSING: 2,
+                  CLOSED: 3,
+                  send: function () {},
+                  close: function () {},
+                  addEventListener: function (type, listener, options) {
+                    if (target.addEventListener) target.addEventListener(type, listener, options);
+                  },
+                  removeEventListener: function (type, listener, options) {
+                    if (target.removeEventListener) target.removeEventListener(type, listener, options);
+                  },
+                  dispatchEvent: function () {
+                    return true;
+                  },
+                  onopen: null,
+                  onmessage: null,
+                  onerror: null,
+                  onclose: null,
+                };
+              }
+              return protocols !== undefined
+                ? new NativeWebSocket(url, protocols)
+                : new NativeWebSocket(url);
+            };
+            PatchedWebSocket.prototype = NativeWebSocket.prototype;
+            PatchedWebSocket.CONNECTING = NativeWebSocket.CONNECTING;
+            PatchedWebSocket.OPEN = NativeWebSocket.OPEN;
+            PatchedWebSocket.CLOSING = NativeWebSocket.CLOSING;
+            PatchedWebSocket.CLOSED = NativeWebSocket.CLOSED;
+            window.WebSocket = PatchedWebSocket;
+          }
         } catch (_err) {
           // Ignore if non-configurable in this frame
         }
@@ -40,7 +89,9 @@
             var file = String((event && event.filename) || '');
             if (
               msg.indexOf('Cannot set property fetch of #<Window>') !== -1 ||
-              file.indexOf('chrome-extension://') === 0
+              msg.indexOf('WebSocket closed without opened') !== -1 ||
+              file.indexOf('chrome-extension://') === 0 ||
+              file.indexOf('/@vite/client') !== -1
             ) {
               event.preventDefault();
               event.stopImmediatePropagation();
@@ -57,7 +108,9 @@
             var stack = String((event && event.reason && event.reason.stack) || '');
             if (
               reason.indexOf('Cannot set property fetch of #<Window>') !== -1 ||
-              stack.indexOf('chrome-extension://') !== -1
+              reason.indexOf('WebSocket closed without opened') !== -1 ||
+              stack.indexOf('chrome-extension://') !== -1 ||
+              stack.indexOf('/@vite/client') !== -1
             ) {
               event.preventDefault();
               event.stopImmediatePropagation();

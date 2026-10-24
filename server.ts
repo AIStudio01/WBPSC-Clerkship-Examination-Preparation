@@ -162,14 +162,15 @@ app.post('/api/mock-tests/start', async (req, res) => {
 
       let liveNewQuestions: QuestionItem[] = [];
       if (subjectFilter === 'General Studies' || subjectFilter === 'Arithmetic' || subjectFilter === 'English') {
+        const validSubject: SubjectName = subjectFilter;
         const defaultTopicMap: Record<SubjectName, string> = {
           'General Studies': 'Indian Polity & Constitution',
           Arithmetic: 'Simple & Compound Interest',
           English: 'Grammar (Prepositions, Articles, Tense)',
         };
         liveNewQuestions = createDeterministicVerifiedQuestions(
-          subjectFilter,
-          topicFilter || defaultTopicMap[subjectFilter],
+          validSubject,
+          topicFilter || defaultTopicMap[validSubject],
           'medium',
           3
         );
