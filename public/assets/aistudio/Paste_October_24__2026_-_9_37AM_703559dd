@@ -1,0 +1,1346 @@
+# MASTER PROMPT: BUILD A COMPLETE AI-POWERED WBPSC CLERKSHIP EXAM PREPARATION & MOCK TEST APPLICATION
+
+## 1. PROJECT OVERVIEW
+
+Build a complete, functional, production-oriented AI-powered learning and examination preparation application specifically for candidates preparing for the West Bengal Public Service Commission (WBPSC) Clerkship Examination.
+
+The application must act as a knowledgeable, patient, encouraging, and highly effective personal teacher. Its primary objective is to help students understand the syllabus, master important concepts, practice extensively, correct their mistakes, improve exam performance, and maximize their chances of qualifying.
+
+This must not be just a static quiz website or a basic AI chatbot. It must be an integrated examination preparation platform with a verified previous-year question database, an intelligent question-generation engine, realistic mock examinations, child-friendly AI explanations, a personalized learning system, progress analytics, and an administration dashboard.
+
+The application should support Bengali and English, with simple Bengali as the default explanation language for students who select Bengali.
+
+### Core principle
+
+Act like an experienced teacher preparing a student for an important examination.
+
+Do not merely tell the student which answer is correct. Teach the student how to understand the question, why an answer is correct, why another answer is incorrect, and how to solve similar questions independently in the future.
+
+Never guarantee that a student will pass. Instead, help the student become better prepared through accurate teaching, extensive practice, and measurable improvement.
+
+---
+
+## 2. OFFICIAL EXAMINATION INFORMATION AND SOURCE VERIFICATION
+
+Use the official WBPSC website as the primary source for examination information:
+
+https://psc.wb.gov.in/
+
+Prioritize these materials:
+- Official examination advertisements and notifications.
+- Official scheme and syllabus documents.
+- Official previous-year question papers.
+- Official provisional and final answer keys.
+- Official corrigenda and updated examination instructions.
+- Officially published examination-related announcements.
+
+The system must identify the examination cycle, advertisement number, publication date, and applicable version of the official scheme.
+
+Before configuring a mock test, verify the current applicable:
+- Examination stages.
+- Total questions and marks.
+- Subject-wise marks distribution.
+- Duration.
+- Question type.
+- Negative marking.
+- Syllabus.
+- Language requirements.
+- Any other relevant examination rules.
+
+Never assume that a previous examination's pattern is automatically applicable to every future examination.
+
+Store these rules in an editable, versioned examination-configuration database rather than hard-coding them throughout the application.
+
+If the latest official information cannot be verified, clearly identify the uncertainty and use the most recent verified examination scheme as a provisional practice configuration. Do not present unverified rules as officially confirmed.
+
+The system must keep historical examination patterns available so students can practice according to specific previous examination cycles.
+
+---
+
+## 3. COMPLETE PREVIOUS-YEAR QUESTION DATABASE
+
+Create a comprehensive Previous Year Questions (PYQ) module containing all available and legally accessible authentic WBPSC Clerkship question papers.
+
+Do not limit the database to only the latest year. Collect and organize every available examination cycle, session, question-paper set, and official answer key that can be reliably obtained.
+
+### Data collection and import
+
+Provide an admin interface to import:
+- PDF question papers.
+- Scanned question papers where processing is supported.
+- CSV and Excel question datasets.
+- JSON question datasets.
+- Official answer keys.
+- Manually entered questions.
+- Verified explanations and reference materials.
+
+For each imported source, store:
+- Examination name.
+- Advertisement number.
+- Year and examination date, where available.
+- Session and shift, where applicable.
+- Question-paper set or booklet series.
+- Original question number.
+- Question text.
+- All answer options.
+- Correct answer, if officially verified.
+- Official answer-key status.
+- Source document URL.
+- Source document reference.
+- Subject and topic.
+- Difficulty level.
+- Language.
+- Verification status.
+- Import and review date.
+
+Do not invent missing historical papers or claim that every previous examination has been collected if some papers are unavailable.
+
+### OCR and data quality
+
+If OCR is used to read scanned papers, preserve the source document and flag uncertain text, mathematical symbols, dates, spellings, or answer choices for manual review.
+
+Never silently guess a damaged or unreadable question.
+
+Before an authentic previous-year question is included in a verified question bank, validate its text, options, answer, examination source, and question number.
+
+### Official answer-key priority
+
+Distinguish between provisional, revised, and final official answer keys.
+
+Where an official final answer key changes an earlier answer, use the final applicable answer for scoring and record the revision history.
+
+If a question is disputed, ambiguous, withdrawn, or has multiple accepted answers, mark it appropriately and exclude it from ordinary scored tests until resolved.
+
+Clearly label every question as one of the following:
+
+1. Authentic Previous-Year Question.
+2. AI-Generated Original Practice Question.
+3. Adapted Practice Question Based on a Previous-Year Concept.
+4. Imported Question Awaiting Verification.
+
+Never falsely label an AI-generated question as an authentic WBPSC question.
+
+---
+
+## 4. AI-POWERED PREVIOUS-YEAR QUESTION ANALYSIS
+
+Build an analysis engine that studies the available historical question papers in depth.
+
+The AI should analyze:
+
+- Frequently tested topics.
+- Topic-wise question frequency.
+- Historical subject distribution.
+- Question structure and wording.
+- Typical difficulty levels.
+- Common distractors and mistakes.
+- English vocabulary and grammar patterns.
+- Arithmetic problem-solving methods.
+- General Studies knowledge areas.
+- Repeated concepts across multiple examination cycles.
+- Trends and changes in examination patterns.
+- Topics that deserve regular revision.
+- Areas where the student is particularly weak.
+
+Generate an internal topic map and a blueprint for future mock examinations.
+
+For example, if historical questions frequently test percentages, ratios, averages, or profit and loss, the system should understand the types of mathematical skills being assessed and generate additional questions testing those skills.
+
+For General Studies, identify recurring historical periods, geography concepts, scientific principles, and other syllabus-relevant topics.
+
+For English, analyze vocabulary, synonyms, antonyms, grammar rules, sentence structure, correct usage, and other officially relevant areas.
+
+Do not treat historical frequency as proof that a topic will appear in the next examination. Use frequency as one signal alongside official syllabus coverage, difficulty, and the student's learning needs.
+
+Provide an admin analytics page showing topic frequency, examination coverage, historical source coverage, and areas with insufficient data.
+
+---
+
+## 5. INTELLIGENT DYNAMIC QUESTION GENERATION ENGINE
+
+Develop an AI question-generation engine that creates a continually expanding collection of original practice questions based on the verified syllabus and the style and difficulty of historical WBPSC questions.
+
+The purpose is to provide extensive practice without unnecessarily repeating questions that the student has already attempted.
+
+### Question-generation requirements
+
+Every generated question must:
+- Match the applicable syllabus.
+- Match the intended subject and topic.
+- Use appropriate examination-level language.
+- Have a clear, unambiguous question statement.
+- Have four options, A, B, C, and D, where appropriate to the configured exam format.
+- Have exactly one defensible correct answer unless the verified exam format explicitly permits otherwise.
+- Include an explanation of the correct answer.
+- Include explanations for incorrect options.
+- Have a difficulty rating.
+- Have a unique question ID.
+- Include subject and topic metadata.
+- Be distinguishable from an authentic previous-year question.
+- Avoid copied content from unrelated examinations.
+- Be factually and mathematically verified before being used in a scored test.
+
+### Generate meaningful variations
+
+The AI should learn the underlying concept rather than merely changing a few words from an existing question.
+
+For example, if a previous-year Arithmetic question assesses percentages, the AI may create a new problem involving a different quantity, context, calculation, and set of distractors while testing the same mathematical skill.
+
+For English, create new sentences and vocabulary contexts appropriate to the syllabus.
+
+For General Studies, produce original questions that assess the same syllabus knowledge without falsely attributing them to an official paper.
+
+Generate both familiar question types and appropriately varied applications of known concepts.
+
+### Answer verification pipeline
+
+Before publishing a generated question, the system must:
+1. Generate the question and proposed answer.
+2. Check the question against the syllabus.
+3. Validate the correctness of the answer.
+4. Check that every option is appropriate.
+5. Check that only one answer is correct where a single-answer MCQ is required.
+6. Independently verify calculations when applicable.
+7. Check factual claims against reliable sources when applicable.
+8. Validate the explanation against the verified answer.
+9. Compare the question with existing questions for duplication.
+10. Approve the question only after all mandatory checks pass.
+
+Use deterministic calculation or validation functions for arithmetic wherever possible rather than relying exclusively on language-model reasoning.
+
+For current affairs, use dated, reliable references. Never invent news, dates, statistics, or historical events.
+
+If a question cannot be verified or remains ambiguous, do not include it in a scored mock test.
+
+---
+
+## 6. STRONG NON-REPETITION SYSTEM
+
+This is one of the most important features of the application.
+
+The student should receive a genuinely fresh mock test every time they start a new regular mock examination.
+
+### Question history
+
+Track:
+- Every question presented to each student.
+- The test in which it appeared.
+- The date of the attempt.
+- The student's selected answer.
+- Whether the answer was correct.
+- Time spent answering.
+- Whether the student reviewed the explanation.
+- The concepts associated with the question.
+
+### Duplicate detection
+
+Use unique question IDs and semantic similarity detection to identify both exact duplicates and substantially similar questions.
+
+The duplicate-detection system must recognize when two questions differ only in wording, option order, superficial names, or insignificant numerical changes.
+
+Maintain separate historical records for authentic PYQs, adapted questions, and AI-generated questions.
+
+A regular mock test must exclude previously attempted question IDs and substantially duplicated questions from the student's history wherever sufficient alternatives exist.
+
+### Fresh-test rules
+
+When starting a new mock test:
+- Retrieve unseen questions from the eligible question pool.
+- Generate additional questions if necessary.
+- Validate the questions before including them.
+- Avoid repeating the same concepts in exactly the same way.
+- Vary difficulty and topic coverage according to the examination blueprint.
+- Keep the number of questions and section distribution consistent with the selected examination configuration.
+- Remember which questions the student has already seen.
+
+Previously answered questions may appear again in a separately labelled Revision or Mistake Practice mode because spaced repetition is useful for learning.
+
+Do not mix revision questions into regular fresh mock tests unless the user explicitly enables that option.
+
+The system must not promise literally infinite questions or absolute uniqueness. If the eligible pool is temporarily exhausted, generate and validate more questions. If sufficient fresh questions cannot be produced, clearly explain the limitation rather than silently repeating questions.
+
+### Independent uniqueness levels
+
+Offer three practice modes:
+1. Fresh Mock Test — prioritize unseen questions.
+2. Topic Practice — provide fresh questions for a selected topic.
+3. Mistake Revision — revisit previous errors and closely related practice questions.
+
+---
+
+## 7. REALISTIC WBPSC CLERKSHIP PART-I MOCK EXAMINATION
+
+Build a full examination simulator that reproduces the configured official Part-I examination rules.
+
+For the WBPSC Clerkship Examination 2023 scheme, the documented configuration is:
+
+- Total questions: 100.
+- Total marks: 100.
+- Marks per question: 1.
+- Duration: 90 minutes.
+- English: 30 marks.
+- General Studies: 40 marks.
+- Arithmetic: 30 marks.
+- Negative marking: 0.25 mark for each incorrect MCQ.
+
+These values must be editable and verified against the intended examination cycle before being presented as current official rules.
+
+### Exam screen
+
+Create a distraction-free, professional, desktop- and mobile-friendly test interface.
+
+Display:
+- Examination title.
+- Selected exam configuration.
+- Countdown timer.
+- Question number.
+- Question text.
+- Answer choices.
+- Previous and Next buttons.
+- Save or automatically save answer status.
+- Mark for Review.
+- Clear Response.
+- Question palette.
+- Answered question count.
+- Unanswered question count.
+- Marked-for-review question count.
+- Submit Test button.
+
+Use clear visual states for answered, unanswered, marked-for-review, and currently selected questions.
+
+Allow students to navigate between questions without losing their answers.
+
+### Timer and submission
+
+Start the countdown when the student begins the test.
+
+Persist the exam start time and deadline on the server so refreshing the page does not reset the timer.
+
+Automatically submit the test when the configured duration expires.
+
+Handle accidental disconnections and page reloads without losing saved responses.
+
+Before manual submission, display a confirmation dialog showing answered, unanswered, and marked-for-review questions.
+
+Once the test is submitted, prevent changes to the scored attempt.
+
+### Scoring
+
+Use the exact scoring configuration for the selected examination.
+
+For a scheme with +1 for a correct answer and -0.25 for an incorrect answer:
+
+Score = Correct Answers × 1 − Incorrect Answers × 0.25
+
+Unanswered questions receive zero marks unless the official configuration states otherwise.
+
+Calculate the result on the server, not solely in the browser.
+
+Provide deterministic, reproducible scoring and store the result with the examination configuration version used for that test.
+
+---
+
+## 8. TWO DISTINCT LEARNING EXPERIENCES
+
+Provide two different modes to balance realistic examination conditions with immediate teaching.
+
+### Mode A: Real Exam Simulation
+
+During the examination, do not reveal whether the student's answer is correct or incorrect.
+
+Do not show solutions, hints, or AI explanations before the test ends.
+
+After submission, show the complete result, verified answers, explanations, and performance analysis.
+
+This mode must simulate examination conditions as closely as possible.
+
+### Mode B: Learn While Practicing
+
+In topic practice or guided practice, allow the student to receive immediate feedback after answering a question.
+
+If the answer is incorrect, open the AI teacher explanation immediately.
+
+If the answer is correct, provide a brief confirmation and an optional explanation.
+
+The student may then proceed to another question or request another example.
+
+The distinction between these two modes must be clearly visible in the interface.
+
+---
+
+## 9. CHILD-FRIENDLY AI TEACHER — MOST IMPORTANT FEATURE
+
+The AI teacher must explain mistakes as if teaching a young child who is encountering the concept for the first time.
+
+This is a core product requirement, not an optional enhancement.
+
+The teaching style must be extremely simple, patient, friendly, encouraging, and easy to understand.
+
+The AI must never ridicule, shame, blame, or frighten a student for answering incorrectly.
+
+### Required behavior after a wrong answer
+
+When a student selects the wrong answer, the AI must explain:
+
+1. What the student selected.
+2. Why the selected answer is wrong.
+3. Which answer is correct.
+4. Why the correct answer is correct.
+5. The exact concept, calculation, fact, or grammar rule involved.
+6. How to solve the question step by step.
+7. An everyday example or simple comparison.
+8. A memory trick, when useful.
+9. One fresh practice question that checks understanding.
+
+### Explain in extremely simple Bengali
+
+When Bengali is selected, use simple, natural Bengali sentences.
+
+Assume the student may have a weak academic foundation and may not understand technical terms.
+
+Use familiar examples involving money, fruits, school, toys, daily routines, shopping, distances, or other everyday situations when appropriate.
+
+Avoid complicated academic language, long paragraphs, unexplained formulas, and unnecessarily difficult vocabulary.
+
+If a technical word is necessary, explain its meaning immediately.
+
+Break calculations into small, numbered steps.
+
+For English questions, explain the English rule in Bengali while retaining the important English word or sentence.
+
+For General Studies questions, explain the relevant fact and the reason behind it where appropriate.
+
+For questions that assess factual recall, do not invent a deeper explanation that is unsupported by the available evidence.
+
+### Required explanation format
+
+Use this structure after an incorrect answer:
+
+**১. তোমার উত্তর**
+
+Show the selected option and its text.
+
+**২. সঠিক উত্তর**
+
+Show the verified correct option and its text.
+
+**৩. চলো, খুব সহজ করে বুঝি**
+
+Explain the concept using simple Bengali, as if teaching a beginner.
+
+**৪. তোমার উত্তরটি কেন ভুল?**
+
+Explain the precise misconception, incorrect calculation, mistaken fact, or grammar error behind the student's choice.
+
+**৫. সঠিক উত্তরটি কেন ঠিক?**
+
+Explain the correct reasoning in small, clear steps.
+
+**৬. একটি সহজ উদাহরণ**
+
+Use a relatable daily-life example whenever one can genuinely help.
+
+**৭. মনে রাখার সহজ কৌশল**
+
+Provide a short memory trick, rule, formula, or solving strategy if applicable.
+
+**৮. এবার তুমি চেষ্টা করো**
+
+Generate one new, validated practice question about the same underlying concept.
+
+Do not reveal the answer to this follow-up practice question before the student responds.
+
+**৯. শিক্ষকের উৎসাহ**
+
+End with a brief, encouraging sentence when appropriate.
+
+Do not force every explanation to contain all nine sections when a question needs only a simple explanation. Keep the language natural and proportional to the student's needs.
+
+### Example teaching behavior
+
+Question: Which planet is known as the Red Planet?
+
+Student's answer: Venus.
+
+AI teacher:
+
+"কোনও অসুবিধা নেই! চলো, খুব সহজ করে শিখি।
+
+**তোমার উত্তর Venus কেন ভুল?**
+
+Venus বা শুক্র গ্রহকে Red Planet বলা হয় না।
+
+**সঠিক উত্তর Mars কেন?**
+
+মঙ্গল গ্রহের মাটিতে লোহাযুক্ত পদার্থ রয়েছে। সেগুলিতে মরচে ধরার মতো পরিবর্তনের কারণে গ্রহটিকে লালচে দেখায়।
+
+যেমন, লোহার গায়ে মরচে পড়লে সেটি লালচে-বাদামি হয়ে যায়!
+
+**মনে রাখার কৌশল:**
+
+Mars = Red Planet = মঙ্গল = লাল গ্রহ।
+
+দেখলে? এবার বিষয়টা অনেক সহজ!
+
+**এবার তুমি চেষ্টা করো:**
+
+Which planet is known as the Red Planet?
+
+A. Earth  
+B. Mars  
+C. Venus  
+D. Jupiter"
+
+This example illustrates the teaching style, but the production system must generate question-specific explanations rather than repeating a fixed template without reasoning.
+
+### Personalize explanations over time
+
+If the student repeatedly makes similar errors, adapt the next explanation.
+
+For example:
+- If the student struggles with fractions, start with a simple visual or everyday example.
+- If the student repeatedly makes arithmetic calculation mistakes, show each calculation separately.
+- If the student forgets English grammar rules, explain the rule and provide several short examples.
+- If the student answers General Studies questions incorrectly, use a memory aid or contextual explanation when appropriate.
+
+Never assume that the student has understood a concept merely because the explanation was displayed.
+
+Use follow-up questions to verify understanding.
+
+---
+
+## 10. BILINGUAL EXPERIENCE
+
+Provide a language selector with:
+- Bengali.
+- English.
+
+Use Bengali as the default language for explanations when selected by the student.
+
+Support English explanations for students who prefer them.
+
+Where the official question is in English, preserve the original wording in authentic-PYQ mode and provide a Bengali translation or meaning separately when permitted.
+
+For AI-generated questions, support English questions with Bengali explanations, Bengali practice questions where appropriate, and bilingual learning notes.
+
+Changing the interface language must not alter the underlying answer key or scoring.
+
+Never translate a technical or factual question in a way that changes its meaning or makes an incorrect option accidentally correct.
+
+Clearly distinguish official source text from translated learning support.
+
+---
+
+## 11. PERSONALIZED ADAPTIVE LEARNING ENGINE
+
+Create a student-specific learning system that identifies weaknesses and adjusts future practice.
+
+Track performance by subject, topic, difficulty, and question type.
+
+For each student, calculate:
+- Accuracy percentage.
+- Correct and incorrect answers.
+- Attempted and skipped questions.
+- Average response time.
+- Repeated mistake patterns.
+- Topic mastery level.
+- Improvement over time.
+- Practice consistency.
+- Areas that require revision.
+
+### Adaptive question selection
+
+Use the following signals to choose future questions:
+- Weak topics.
+- Frequently incorrect concepts.
+- Historical syllabus relevance.
+- Performance on previous questions.
+- Time since the last practice attempt.
+- Current question difficulty.
+- Recent improvement or decline.
+
+Initially provide a balanced syllabus-based set.
+
+As more performance data becomes available, give additional practice to weak areas without abandoning other important subjects.
+
+Gradually increase difficulty as the student's understanding improves.
+
+Use spaced repetition for previously incorrect concepts in revision mode.
+
+Avoid overwhelming beginners with extremely difficult questions before they have learned the fundamentals.
+
+Allow the student to practice a topic independently even if the AI recommends another topic.
+
+---
+
+## 12. LEARNING MODES AND EXAM PREPARATION MODULES
+
+Build the following modules.
+
+### A. Full-Length AI Mock Test
+
+Reproduce the configured examination's total questions, subject distribution, marks, timer, and scoring rules.
+
+Generate a fresh, validated question set for every new attempt.
+
+### B. Previous-Year Question Practice
+
+Allow students to select:
+- Examination year.
+- Session or shift, if available.
+- Paper set, if available.
+- Subject.
+- Topic.
+- Difficulty.
+
+Label original PYQs separately from any AI-added explanations.
+
+### C. Subject-Wise Practice
+
+Provide dedicated practice for:
+- English.
+- General Studies.
+- Arithmetic.
+
+Use the verified syllabus associated with the target examination.
+
+### D. Topic-Wise Practice
+
+Allow the student to choose a topic and difficulty level.
+
+Generate fresh, validated questions and immediately explain mistakes in Learn While Practicing mode.
+
+### E. Mistake Notebook
+
+Automatically save questions the student answered incorrectly.
+
+For each mistake, store the question, selected option, correct answer, explanation, topic, attempt date, and improvement status.
+
+Allow filtering by subject, topic, and date.
+
+### F. Revision Mode
+
+Revisit previous mistakes and related concepts.
+
+Allow spaced repetition and additional practice on weak areas.
+
+Clearly identify questions as revision questions rather than fresh mock questions.
+
+### G. Timed Speed Practice
+
+Allow short, timed practice sessions that help students improve their speed and accuracy.
+
+### H. Study Plan
+
+Create a personalized daily and weekly study schedule according to the student's current performance, exam date if provided, and available study time.
+
+Include new learning, practice, revision, and full mock tests.
+
+### I. Part-II Preparation
+
+Provide an optional module for the Conventional Type examination, based on the applicable official scheme.
+
+Support the configured language requirements and relevant tasks, such as report drafting, précis or summary writing, and translation.
+
+Use clearly labelled AI feedback, editable model answers, writing practice, and a teacher-review workflow where possible.
+
+Do not apply Part-I MCQ scoring rules to Part-II written responses.
+
+### J. Computer and Typing Practice
+
+Provide optional elementary computer knowledge and typing practice modules to support preparation for the relevant subsequent assessment.
+
+Clearly distinguish practice activities from any official assessment or qualifying rule.
+
+---
+
+## 13. RESULTS AND PERFORMANCE ANALYTICS
+
+After every submitted mock examination, generate a detailed results page.
+
+Display:
+- Total score.
+- Maximum marks.
+- Correct answers.
+- Incorrect answers.
+- Unanswered questions.
+- Accuracy percentage.
+- Time used.
+- Subject-wise marks.
+- Topic-wise performance.
+- Negative marks, where applicable.
+- Comparison with previous attempts.
+- Strongest topics.
+- Weakest topics.
+- Recommended next steps.
+
+Show the score calculation transparently.
+
+For example, under the configured +1/-0.25 scheme:
+
+Correct answers: 72  
+Incorrect answers: 20  
+Unanswered: 8
+
+Final score = 72 − (20 × 0.25) = 67 out of 100.
+
+The app must calculate these values from the actual saved responses, not from illustrative examples.
+
+### Subject analysis
+
+Provide clear visual charts for:
+- English performance.
+- General Studies performance.
+- Arithmetic performance.
+- Topic-level accuracy.
+- Score trends across attempts.
+- Time spent on questions.
+- Improvement in previously weak subjects.
+
+### Rank and percentile
+
+Do not invent a national rank or official examination percentile.
+
+Only calculate an estimated ranking when there is a sufficiently large, clearly defined, and representative comparison dataset.
+
+Explain the sample size, comparison group, date, and methodology.
+
+Clearly label any such metric as an estimate rather than an official WBPSC ranking.
+
+### Readiness assessment
+
+Provide a practical preparation assessment based on the student's progress and performance stability.
+
+Use labels such as:
+- Beginner.
+- Developing.
+- Improving.
+- Consistent Practice.
+- Strong Practice Performance.
+
+Explain what the student should work on next.
+
+Never promise selection, a guaranteed pass, or an exact future examination score.
+
+---
+
+## 14. HOME PAGE AND STUDENT DASHBOARD
+
+Create a modern, clean, responsive dashboard.
+
+Include:
+- Welcome message.
+- Student profile.
+- Current learning streak.
+- Overall preparation progress.
+- Latest mock test score.
+- Best score.
+- Recent mock tests.
+- Subject-wise performance.
+- Weak-topic summary.
+- Today's recommended study tasks.
+- Start New AI Mock Test button.
+- Continue Learning button.
+- Practice Previous-Year Questions button.
+- Practice Weak Topics button.
+- Review Mistakes button.
+- View Progress button.
+
+Make the main action, "Start New AI Mock Test", prominent and easy to find.
+
+Keep the interface simple enough for first-time smartphone users.
+
+Avoid unnecessary animations, distracting gradients, complex navigation, and clutter.
+
+The application must be responsive across mobile phones, tablets, laptops, and desktop computers.
+
+---
+
+## 15. ADMIN DASHBOARD AND CONTENT MANAGEMENT
+
+Provide a secure administrator interface for managing the learning platform.
+
+### Question management
+
+Administrators must be able to:
+- Create and edit questions.
+- Import bulk question datasets.
+- Add answer keys.
+- Attach explanations and sources.
+- Classify subjects and topics.
+- Change difficulty levels.
+- Approve or reject AI-generated questions.
+- Flag incorrect, ambiguous, or duplicate questions.
+- Review student-reported errors.
+- Disable questions that should no longer be used.
+- View question usage statistics.
+
+### Examination configuration
+
+Allow authorized administrators to define:
+- Examination cycle.
+- Applicable scheme and version.
+- Number of questions.
+- Subject distribution.
+- Maximum marks.
+- Duration.
+- Marking scheme.
+- Negative marking.
+- Topic coverage.
+- Difficulty distribution.
+- Applicable syllabus.
+
+Maintain a revision history so changes do not silently alter the scoring rules of an already completed test.
+
+### Source management
+
+Allow administrators to record:
+- Official source URL.
+- Document title.
+- Examination year.
+- Document publication date.
+- Document type.
+- Verification notes.
+- Answer-key status.
+- Last review date.
+
+Ensure uploaded or imported content is obtained and used according to applicable permissions and source restrictions.
+
+### Quality monitoring
+
+Provide an admin quality page showing:
+- Questions awaiting verification.
+- Questions with disputed answers.
+- Duplicate candidates.
+- Generation failures.
+- AI validation failures.
+- Low-confidence explanations.
+- Reported errors.
+- Topics with insufficient question coverage.
+- Source documents awaiting review.
+
+---
+
+## 16. DATABASE ARCHITECTURE
+
+Use a relational database, preferably PostgreSQL or an equivalent reliable database with transaction support.
+
+Design a normalized schema with suitable indexes, foreign keys, access controls, and validation rules.
+
+Recommended entities include:
+
+### Users
+
+- id
+- name or display_name
+- email or authentication identifier
+- preferred_language
+- role
+- created_at
+- updated_at
+
+### ExamConfigurations
+
+- id
+- examination_name
+- advertisement_number
+- scheme_version
+- effective_date
+- total_questions
+- total_marks
+- duration_seconds
+- section_configuration
+- marking_configuration
+- official_source_url
+- verification_status
+- created_at
+- updated_at
+
+### SourceDocuments
+
+- id
+- title
+- source_type
+- examination_year
+- session
+- source_url
+- document_reference
+- publication_date
+- verification_status
+- notes
+
+### Questions
+
+- id
+- question_type
+- question_origin
+- source_document_id
+- exam_configuration_id
+- examination_year
+- session
+- original_question_number
+- subject
+- topic
+- subtopic
+- difficulty
+- question_text
+- options
+- correct_answer
+- explanation
+- explanation_language
+- verification_status
+- content_hash
+- semantic_similarity_reference
+- created_at
+- updated_at
+
+### QuestionSources
+
+- id
+- question_id
+- source_document_id
+- source_question_reference
+- attribution_notes
+
+### MockTests
+
+- id
+- user_id
+- exam_configuration_id
+- test_mode
+- started_at
+- deadline_at
+- submitted_at
+- status
+- total_questions
+- correct_count
+- incorrect_count
+- unanswered_count
+- score
+- maximum_marks
+- configuration_snapshot
+
+### MockTestQuestions
+
+- id
+- mock_test_id
+- question_id
+- display_order
+- marks
+- negative_marks
+- question_snapshot
+- answer_key_version
+
+### StudentResponses
+
+- id
+- mock_test_question_id
+- selected_answer
+- response_status
+- answered_at
+- time_spent_seconds
+- is_correct
+- awarded_marks
+
+### LearningProgress
+
+- id
+- user_id
+- subject
+- topic
+- mastery_score
+- attempts
+- correct_count
+- incorrect_count
+- last_practiced_at
+- next_review_at
+
+### MistakeNotebook
+
+- id
+- user_id
+- question_id
+- last_selected_answer
+- misconception_type
+- explanation_reviewed
+- revision_status
+- next_revision_at
+
+### GeneratedExplanations
+
+- id
+- question_id
+- user_id
+- selected_answer
+- correct_answer_snapshot
+- explanation_text
+- language
+- verification_status
+- created_at
+
+### GenerationJobs
+
+- id
+- job_type
+- subject
+- topic
+- requested_count
+- generated_count
+- approved_count
+- failed_count
+- status
+- error_details
+- created_at
+- completed_at
+
+Adapt this schema where needed while preserving question history, score reproducibility, source traceability, and secure student-specific data access.
+
+Avoid duplicating unnecessary records. Use database constraints and transactions to preserve consistency.
+
+---
+
+## 17. AI INTEGRATION ARCHITECTURE
+
+Use an AI provider abstraction that can connect to a supported model provider such as Google Gemini or OpenAI.
+
+The AI must be used for:
+- Historical pattern analysis.
+- Original question generation.
+- Question explanation.
+- Mistake analysis.
+- Bengali and English tutoring.
+- Personalized learning recommendations.
+- Study-plan generation.
+- Optional written-answer feedback.
+
+Do not expose API keys in browser code, public repositories, client-side configuration, or frontend network responses.
+
+Store API credentials securely in server-side environment variables or a suitable secrets manager.
+
+Use a configurable provider and model so administrators can change providers without rewriting the application.
+
+### Structured AI responses
+
+Require structured JSON responses for question generation and other operations that feed application logic.
+
+For each generated question, request fields such as:
+
+{
+  "question_id": "generated_unique_id",
+  "origin": "AI_GENERATED",
+  "subject": "Arithmetic",
+  "topic": "Percentage",
+  "difficulty": "medium",
+  "question_text": "Question text",
+  "options": {
+    "A": "Option A",
+    "B": "Option B",
+    "C": "Option C",
+    "D": "Option D"
+  },
+  "correct_answer": "B",
+  "answer_explanation": "Verified explanation",
+  "wrong_option_explanations": {
+    "A": "Explanation",
+    "C": "Explanation",
+    "D": "Explanation"
+  },
+  "bengali_explanation": "Simple Bengali explanation",
+  "verification_status": "PENDING"
+}
+
+This is an illustrative response schema. Validate all generated data using strict application-side schemas before saving or displaying it.
+
+Do not trust a model's self-reported verification status. Perform verification through separate application logic and reliable source data.
+
+### AI reliability
+
+Use appropriate timeouts, error handling, rate limits, and retries.
+
+Prevent multiple identical generation requests from creating unnecessary duplicate jobs.
+
+Cache reusable, verified explanations where appropriate.
+
+Do not cache a student-specific explanation in a way that accidentally exposes another student's private information.
+
+If a provider fails, explain the problem clearly and preserve the student's saved work.
+
+Do not fabricate AI output or show a fake successful generation status.
+
+---
+
+## 18. TECHNICAL STACK AND IMPLEMENTATION
+
+Preferred default architecture for a production-ready web application:
+
+### Frontend
+
+- Next.js.
+- React.
+- TypeScript.
+- Tailwind CSS.
+- Accessible reusable UI components.
+- Responsive desktop and mobile layouts.
+- A reliable charting library for performance analytics.
+
+### Backend
+
+- Next.js server-side APIs or a dedicated backend service.
+- Python FastAPI where a separate question-processing service is useful.
+- Server-side business logic for scoring, question validation, and test submission.
+
+### Database and authentication
+
+- PostgreSQL.
+- Supabase is an acceptable default for database, authentication, and storage where suitable.
+- Row-level security or equivalent secure authorization policies.
+- Secure server-side access for privileged operations.
+
+### AI
+
+- Configurable Gemini or OpenAI integration.
+- Schema-validated model responses.
+- A separate question-validation pipeline.
+- Semantic similarity detection for duplicate questions.
+
+### Storage
+
+Use private object storage for uploaded papers and answer keys.
+
+Do not expose private document URLs or administrative data to unauthorized users.
+
+### Development requirements
+
+Build reusable components, separate application logic from presentation, and use TypeScript types or equivalent validation throughout.
+
+Provide:
+- Environment variable documentation.
+- Database migration files.
+- Seed data clearly labelled as demo content.
+- Installation instructions.
+- Database setup instructions.
+- AI provider configuration.
+- Deployment instructions.
+- Error logging.
+- Basic automated tests.
+- Security documentation.
+
+If the selected AI App Builder uses a different technology stack, implement the equivalent capabilities using that platform's supported architecture.
+
+Do not generate a beautiful static interface and claim that the full application is complete. Every visible feature must be connected to real application state, backend logic, or a clearly labelled unimplemented placeholder.
+
+---
+
+## 19. SECURITY, PRIVACY, AND DATA INTEGRITY
+
+Implement:
+- Secure authentication.
+- Role-based authorization.
+- Server-side permission checks.
+- Protected administrator routes.
+- Student-specific record access.
+- Input validation and output encoding.
+- Rate limiting for AI endpoints.
+- Secure API credential storage.
+- Safe file upload restrictions.
+- Protection against unauthorized result modification.
+- Secure test submission and scoring.
+- Data deletion and retention controls where applicable.
+- Privacy-conscious analytics.
+
+Never allow a student to modify their official score by changing browser state or making a direct API request.
+
+Do not expose the correct answer during a live Real Exam Simulation through client-side question data, hidden frontend fields, or predictable public endpoints.
+
+For exam simulation, reveal answers only after the server has accepted the submission or the test has expired.
+
+Maintain audit logs for administrator changes to answer keys, official examination configurations, and question verification status.
+
+Do not collect sensitive personal information unless it is genuinely required.
+
+---
+
+## 20. USER EXPERIENCE AND VISUAL DESIGN
+
+Create a modern, professional, trustworthy educational application.
+
+Visual direction:
+- Clean, uncluttered layout.
+- Excellent Bengali typography.
+- Readable English typography.
+- Consistent spacing.
+- Clear question cards.
+- Accessible contrast.
+- Simple navigation.
+- Helpful progress indicators.
+- Responsive charts.
+- Friendly AI teacher interface.
+- Clear result screens.
+- Minimal visual distractions during examinations.
+
+Use a professional education-platform aesthetic rather than a gaming-only design.
+
+The student must be able to understand the interface without technical knowledge.
+
+Prioritize usability, speed, clarity, and accessibility over decorative effects.
+
+### Main navigation
+
+Include:
+1. Dashboard.
+2. Start Mock Test.
+3. Previous-Year Questions.
+4. Subject Practice.
+5. Topic Practice.
+6. AI Teacher.
+7. Mistake Notebook.
+8. Revision.
+9. Performance.
+10. Study Plan.
+11. Settings.
+
+Display additional modules only when they are relevant to the student's selected learning path.
+
+---
+
+## 21. PERFORMANCE, RELIABILITY, AND ERROR HANDLING
+
+The application must remain stable when multiple students take tests simultaneously.
+
+Use database transactions for submission and scoring.
+
+Ensure each answer is saved reliably and the same submission cannot be scored twice.
+
+Preserve test progress after accidental refreshes or brief disconnections.
+
+If question generation fails:
+- Save the existing progress.
+- Record the failure.
+- Inform the user clearly.
+- Retry within configured limits where appropriate.
+- Do not insert incomplete questions into a scored test.
+
+If the available question pool cannot meet the required number of questions, do not silently reduce the examination's length or repeat questions against the configured rules.
+
+Report the limitation and offer a suitable alternative, such as retrying generation or taking a shorter, explicitly labelled practice test.
+
+The timer must be based on trusted server timestamps and must not reset after a page refresh.
+
+---
+
+## 22. TESTING AND ACCEPTANCE CRITERIA
+
+Before considering the application complete, verify all of the following.
+
+### Question quality
+
+- Every scored question has a verified answer.
+- All answer choices display correctly.
+- Mathematical solutions are independently validated where practical.
+- Ambiguous questions are excluded.
+- Source attribution is correct.
+- Authentic PYQs are distinguished from generated questions.
+
+### Non-repetition
+
+- Previously attempted questions are tracked.
+- New tests exclude previously seen questions where required.
+- Semantically duplicated questions are detected.
+- Revision mode is separate from fresh-test mode.
+- Insufficient question supply is reported honestly.
+
+### Exam behavior
+
+- The configured number of questions is delivered.
+- Subject distribution follows the selected exam scheme.
+- The timer works.
+- Answers persist after refresh.
+- Manual submission works.
+- Automatic submission works.
+- Scoring follows the selected rules.
+- Negative marks are applied correctly.
+- Results cannot be altered by the client.
+
+### AI Teacher
+
+- A wrong answer triggers the correct explanation in guided practice mode.
+- The selected wrong answer is identified accurately.
+- The correct answer and reasoning are consistent.
+- Bengali explanations use simple language.
+- Arithmetic steps are clear.
+- Follow-up practice questions are new and validated.
+- The AI does not shame the student.
+- Unsupported explanations are flagged instead of invented.
+
+### Data and security
+
+- Student accounts cannot access other students' private records.
+- Admin controls are protected.
+- API keys remain private.
+- Historical attempts remain reproducible.
+- Examination configuration changes do not silently rewrite old scores.
+
+### Dashboard and analytics
+
+- All reported figures are derived from actual stored records.
+- Score calculations are consistent.
+- Subject-level charts match the underlying data.
+- Rank and percentile estimates are not fabricated.
+- The application works on mobile, tablet, and desktop.
+
+---
+
+## 23. DEVELOPMENT AND DELIVERY INSTRUCTIONS
+
+Build the actual functional application, not merely a project description.
+
+Work in the following order:
+
+Phase 1: Establish the project structure, database, authentication, examination configuration, and responsive interface.
+
+Phase 2: Build the question database, source import workflows, previous-year question module, and answer-verification tools.
+
+Phase 3: Build the full-length mock examination engine, timer, question navigation, submission, and scoring.
+
+Phase 4: Integrate the AI question-generation engine and duplicate-detection pipeline.
+
+Phase 5: Implement the Child-Friendly AI Teacher, bilingual explanations, and follow-up practice questions.
+
+Phase 6: Build personalized learning, mistake revision, study plans, and progress analytics.
+
+Phase 7: Complete the administrator dashboard, reliability checks, security controls, automated tests, and deployment documentation.
+
+At the end of each phase, test the functionality before proceeding to the next phase.
+
+Use realistic sample data only when necessary and label all sample questions and scores clearly as demonstration content.
+
+Do not claim that the app contains all historical questions until the data has actually been collected, imported, and verified.
+
+Do not claim that an AI provider is connected until a real connection has been configured and tested.
+
+If external API credentials are unavailable, implement a clearly labelled setup or demo mode. Never simulate a successful live AI response while pretending that the provider is connected.
+
+Provide a working application with a clear route for importing verified official data and adding additional question sources over time.
+
+---
+
+## FINAL PRODUCT REQUIREMENT
+
+The final product must function as a complete, intelligent WBPSC Clerkship preparation system.
+
+Its defining capabilities are:
+
+1. A comprehensive, source-traceable previous-year question database.
+2. Historical pattern analysis based on actual examination data.
+3. A continuously expanding collection of validated original questions.
+4. Fresh mock tests with strong question-repetition controls.
+5. Accurate simulation of the applicable official examination rules.
+6. Immediate, child-friendly Bengali or English explanations in guided practice mode.
+7. Detailed explanations after submission in full exam mode.
+8. Personalized revision and weakness correction.
+9. Reliable scoring and comprehensive performance analytics.
+10. A secure, maintainable system that can grow as new examination materials become available.
+
+The ultimate goal is to ensure that students do not simply memorize answers. They should understand the underlying concepts, learn from their mistakes, become more confident, improve their accuracy and speed, and prepare as effectively as possible for the actual WBPSC Clerkship Examination.
+
+Build the platform around the student's learning, accuracy, and long-term exam readiness.

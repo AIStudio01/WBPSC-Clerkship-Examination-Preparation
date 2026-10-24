@@ -1,0 +1,211 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public and learning preferences profile for a student",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "enum": ["bn", "en"],
+          "maxLength": 10
+        },
+        "targetExamCycle": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "streakDays": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "preferredLanguage", "targetExamCycle", "streakDays", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII record for a student",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "MockTestAttempt": {
+      "title": "MockTestAttempt",
+      "description": "Recorded mock examination attempt for a student",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "examConfigId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "testMode": {
+          "type": "string",
+          "enum": ["FULL_MOCK", "QUICK_MOCK", "TOPIC_PRACTICE", "REVISION"],
+          "maxLength": 32
+        },
+        "status": {
+          "type": "string",
+          "enum": ["IN_PROGRESS", "SUBMITTED"],
+          "maxLength": 32
+        },
+        "totalQuestions": {
+          "type": "integer"
+        },
+        "correctCount": {
+          "type": "integer"
+        },
+        "incorrectCount": {
+          "type": "integer"
+        },
+        "unansweredCount": {
+          "type": "integer"
+        },
+        "score": {
+          "type": "number"
+        },
+        "maximumMarks": {
+          "type": "number"
+        },
+        "timeUsedSeconds": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "examConfigId",
+        "testMode",
+        "status",
+        "totalQuestions",
+        "correctCount",
+        "incorrectCount",
+        "unansweredCount",
+        "score",
+        "maximumMarks",
+        "timeUsedSeconds",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MistakeEntry": {
+      "title": "MistakeEntry",
+      "description": "Saved mistake in the student's Mistake Notebook for spaced repetition",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "questionId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subject": {
+          "type": "string",
+          "enum": ["English", "General Studies", "Arithmetic"],
+          "maxLength": 32
+        },
+        "topic": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "selectedOption": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D"],
+          "maxLength": 4
+        },
+        "correctOption": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D"],
+          "maxLength": 4
+        },
+        "revisionStatus": {
+          "type": "string",
+          "enum": ["NEEDS_REVIEW", "REVIEWED", "MASTERED"],
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "questionId",
+        "subject",
+        "topic",
+        "selectedOption",
+        "correctOption",
+        "revisionStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Student learning profile"
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII storage for the student"
+    },
+    "/mockAttempts/{attemptId}": {
+      "schema": { "$ref": "#/entities/MockTestAttempt" },
+      "description": "Synced mock test summary records per student"
+    },
+    "/mistakeNotebook/{mistakeId}": {
+      "schema": { "$ref": "#/entities/MistakeEntry" },
+      "description": "Mistake notebook items per student"
+    }
+  }
+}

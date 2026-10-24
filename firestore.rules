@@ -1,0 +1,214 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 0: Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'officemailsaty1@gmail.com'
+      );
+    }
+
+    // Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'preferredLanguage', 'targetExamCycle', 'streakDays', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'displayName', 'preferredLanguage', 'targetExamCycle', 'streakDays', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.uid == request.auth.uid &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+        data.preferredLanguage is string && data.preferredLanguage.size() <= 10 && data.preferredLanguage in ['bn', 'en'] &&
+        data.targetExamCycle is string && data.targetExamCycle.size() >= 1 && data.targetExamCycle.size() <= 64 &&
+        data.streakDays is int && data.streakDays >= 0 && data.streakDays <= 10000 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'createdAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.uid == request.auth.uid &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 256 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidMockTestAttempt(data) {
+      return data.keys().hasAll([
+          'userId', 'examConfigId', 'testMode', 'status',
+          'totalQuestions', 'correctCount', 'incorrectCount', 'unansweredCount',
+          'score', 'maximumMarks', 'timeUsedSeconds', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'userId', 'examConfigId', 'testMode', 'status',
+          'totalQuestions', 'correctCount', 'incorrectCount', 'unansweredCount',
+          'score', 'maximumMarks', 'timeUsedSeconds', 'createdAt', 'updatedAt'
+        ]) &&
+        data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.userId == request.auth.uid &&
+        data.examConfigId is string && data.examConfigId.size() >= 1 && data.examConfigId.size() <= 128 && data.examConfigId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.testMode is string && data.testMode.size() <= 32 && data.testMode in ['FULL_MOCK', 'QUICK_MOCK', 'TOPIC_PRACTICE', 'REVISION'] &&
+        data.status is string && data.status.size() <= 32 && data.status in ['IN_PROGRESS', 'SUBMITTED'] &&
+        data.totalQuestions is int && data.totalQuestions >= 1 && data.totalQuestions <= 200 &&
+        data.correctCount is int && data.correctCount >= 0 && data.correctCount <= 200 &&
+        data.incorrectCount is int && data.incorrectCount >= 0 && data.incorrectCount <= 200 &&
+        data.unansweredCount is int && data.unansweredCount >= 0 && data.unansweredCount <= 200 &&
+        data.score is number && data.score >= -100 && data.score <= 200 &&
+        data.maximumMarks is number && data.maximumMarks >= 1 && data.maximumMarks <= 200 &&
+        data.timeUsedSeconds is int && data.timeUsedSeconds >= 0 && data.timeUsedSeconds <= 10800 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidMistakeEntry(data) {
+      return data.keys().hasAll([
+          'userId', 'questionId', 'subject', 'topic',
+          'selectedOption', 'correctOption', 'revisionStatus',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'userId', 'questionId', 'subject', 'topic',
+          'selectedOption', 'correctOption', 'revisionStatus',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.userId == request.auth.uid &&
+        data.questionId is string && data.questionId.size() >= 1 && data.questionId.size() <= 128 && data.questionId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.subject is string && data.subject.size() <= 32 && data.subject in ['English', 'General Studies', 'Arithmetic'] &&
+        data.topic is string && data.topic.size() >= 1 && data.topic.size() <= 100 &&
+        data.selectedOption is string && data.selectedOption.size() <= 4 && data.selectedOption in ['A', 'B', 'C', 'D'] &&
+        data.correctOption is string && data.correctOption.size() <= 4 && data.correctOption in ['A', 'B', 'C', 'D'] &&
+        data.revisionStatus is string && data.revisionStatus.size() <= 32 && data.revisionStatus in ['NEEDS_REVIEW', 'REVIEWED', 'MASTERED'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // Admins Registry
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list, create, update, delete: if false;
+    }
+
+    // Student Profile
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if false;
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserProfile(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidUserProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'preferredLanguage', 'targetExamCycle', 'streakDays', 'updatedAt']))
+        );
+      allow delete: if isValidId(userId) && isAdmin();
+
+      // Master Gate Subcollection: Isolated PII
+      match /private/{docId} {
+        allow get: if isValidId(userId) && isValidId(docId) && (isOwner(userId) || isAdmin()) &&
+          get(/databases/$(database)/documents/users/$(userId)).data.uid == userId;
+        allow list: if false;
+        allow create: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(docId) &&
+          isOwner(userId) &&
+          isValidUserPrivateInfo(incoming()) &&
+          incoming().createdAt == request.time &&
+          get(/databases/$(database)/documents/users/$(userId)).data.uid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // Mock Test Attempts (Terminal State Locked once SUBMITTED)
+    match /mockAttempts/{attemptId} {
+      allow get: if isSignedIn() && isValidId(attemptId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(attemptId) &&
+        isValidMockTestAttempt(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/users/$(incoming().userId));
+      allow update: if isVerifiedUser() &&
+        isValidId(attemptId) &&
+        isValidMockTestAttempt(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().examConfigId == existing().examConfigId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() ||
+          (
+            existing().userId == request.auth.uid &&
+            existing().status == 'IN_PROGRESS' &&
+            incoming().status == 'SUBMITTED' &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'correctCount', 'incorrectCount', 'unansweredCount',
+              'score', 'timeUsedSeconds', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isValidId(attemptId) && isAdmin();
+    }
+
+    // Mistake Notebook Entries
+    match /mistakeNotebook/{mistakeId} {
+      allow get: if isSignedIn() && isValidId(mistakeId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(mistakeId) &&
+        isValidMistakeEntry(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/users/$(incoming().userId));
+      allow update: if isVerifiedUser() &&
+        isValidId(mistakeId) &&
+        isValidMistakeEntry(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().questionId == existing().questionId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() ||
+          (
+            existing().userId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['revisionStatus', 'selectedOption', 'updatedAt'])
+          )
+        );
+      allow delete: if isVerifiedUser() && isValidId(mistakeId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+  }
+}

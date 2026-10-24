@@ -1,0 +1,6 @@
+{
+  "name": "WBPSC Clerkship Shikshak — AI Exam Prep & Mock Test Platform",
+  "description": "Complete bilingual (Bengali & English) AI-powered examination preparation platform, verified PYQ bank, server-timed Part-I mock test simulator, and child-friendly personal teacher for the WBPSC Clerkship Examination.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

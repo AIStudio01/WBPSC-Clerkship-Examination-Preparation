@@ -1,0 +1,290 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-dark-canvas: #0b1120;
+  --color-dark-surface: #111827;
+  --color-dark-elevated: #1e293b;
+  --color-dark-border: #334155;
+  --color-dark-text-primary: #f8fafc;
+  --color-dark-text-secondary: #cbd5e1;
+  --color-dark-text-muted: #94a3b8;
+}
+
+:root {
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --border-subtle: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  color-scheme: light;
+}
+
+html.dark,
+.dark {
+  --bg-canvas: #0b1120;
+  --bg-surface: #111827;
+  --bg-elevated: #1e293b;
+  --border-subtle: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  .font-bengali {
+    font-family: 'Hind Siliguri', 'Plus Jakarta Sans', sans-serif;
+    line-height: 1.7;
+  }
+
+  .font-mono-tabular {
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Comprehensive Dark Palette Mappings for High-Contrast Readability Across All UI Components */
+html.dark body {
+  background-color: #0b1120;
+  color: #f8fafc;
+}
+
+/* Neutral Surfaces in Dark Mode */
+html.dark .bg-white {
+  background-color: #111827 !important;
+}
+
+html.dark .bg-white\/95 {
+  background-color: rgba(17, 24, 39, 0.95) !important;
+}
+
+html.dark .bg-white\/80 {
+  background-color: rgba(30, 41, 59, 0.85) !important;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/80,
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/60,
+html.dark .bg-slate-50\/50 {
+  background-color: #0f172a !important;
+}
+
+html.dark .bg-slate-100,
+html.dark .bg-slate-200\/70 {
+  background-color: #1e293b !important;
+}
+
+/* Semantic Tinted Surfaces in Dark Mode */
+html.dark .bg-sky-50,
+html.dark .bg-sky-50\/80,
+html.dark .bg-sky-50\/70,
+html.dark .bg-sky-50\/60,
+html.dark .bg-sky-50\/50,
+html.dark .bg-sky-50\/40,
+html.dark .bg-sky-50\/30,
+html.dark .bg-sky-100 {
+  background-color: rgba(14, 116, 144, 0.22) !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/90,
+html.dark .bg-emerald-50\/80,
+html.dark .bg-emerald-50\/70,
+html.dark .bg-emerald-50\/60,
+html.dark .bg-emerald-50\/50,
+html.dark .bg-emerald-50\/40,
+html.dark .bg-emerald-100 {
+  background-color: rgba(6, 95, 70, 0.25) !important;
+}
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-50\/90,
+html.dark .bg-rose-50\/80,
+html.dark .bg-rose-50\/70,
+html.dark .bg-rose-50\/60,
+html.dark .bg-rose-50\/50,
+html.dark .bg-rose-50\/40,
+html.dark .bg-rose-100 {
+  background-color: rgba(159, 18, 57, 0.25) !important;
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/90,
+html.dark .bg-amber-50\/80,
+html.dark .bg-amber-50\/70,
+html.dark .bg-amber-50\/60,
+html.dark .bg-amber-50\/50,
+html.dark .bg-amber-50\/40,
+html.dark .bg-amber-100 {
+  background-color: rgba(146, 64, 14, 0.25) !important;
+}
+
+html.dark .bg-indigo-50,
+html.dark .bg-indigo-50\/80,
+html.dark .bg-indigo-50\/70,
+html.dark .bg-indigo-50\/60,
+html.dark .bg-indigo-50\/50,
+html.dark .bg-indigo-100 {
+  background-color: rgba(55, 48, 163, 0.25) !important;
+}
+
+html.dark .bg-purple-50,
+html.dark .bg-purple-50\/80,
+html.dark .bg-purple-50\/70,
+html.dark .bg-purple-50\/60,
+html.dark .bg-purple-50\/50,
+html.dark .bg-purple-100 {
+  background-color: rgba(107, 33, 168, 0.25) !important;
+}
+
+/* Borders & Dividers in Dark Mode */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300 {
+  border-color: #334155 !important;
+}
+
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+html.dark .border-sky-100,
+html.dark .border-sky-200,
+html.dark .border-sky-300 {
+  border-color: rgba(56, 189, 248, 0.35) !important;
+}
+
+html.dark .border-emerald-100,
+html.dark .border-emerald-200,
+html.dark .border-emerald-300 {
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
+html.dark .border-rose-100,
+html.dark .border-rose-200,
+html.dark .border-rose-300 {
+  border-color: rgba(251, 113, 133, 0.35) !important;
+}
+
+html.dark .border-amber-100,
+html.dark .border-amber-200,
+html.dark .border-amber-300 {
+  border-color: rgba(251, 191, 36, 0.35) !important;
+}
+
+html.dark .border-indigo-100,
+html.dark .border-indigo-200,
+html.dark .border-indigo-300 {
+  border-color: rgba(129, 140, 248, 0.35) !important;
+}
+
+html.dark .border-purple-100,
+html.dark .border-purple-200,
+html.dark .border-purple-300 {
+  border-color: rgba(192, 132, 252, 0.35) !important;
+}
+
+/* Typography Contrast in Dark Mode (WCAG AA/AAA) */
+html.dark .text-slate-950,
+html.dark .text-slate-900 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+html.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-sky-950,
+html.dark .text-sky-900,
+html.dark .text-sky-800,
+html.dark .text-sky-700 {
+  color: #7dd3fc !important;
+}
+
+html.dark .text-emerald-950,
+html.dark .text-emerald-900,
+html.dark .text-emerald-800,
+html.dark .text-emerald-700 {
+  color: #6ee7b7 !important;
+}
+
+html.dark .text-rose-950,
+html.dark .text-rose-900,
+html.dark .text-rose-800,
+html.dark .text-rose-700 {
+  color: #fda4af !important;
+}
+
+html.dark .text-amber-950,
+html.dark .text-amber-900,
+html.dark .text-amber-800,
+html.dark .text-amber-700 {
+  color: #fcd34d !important;
+}
+
+html.dark .text-indigo-950,
+html.dark .text-indigo-900,
+html.dark .text-indigo-800,
+html.dark .text-indigo-700 {
+  color: #a5b4fc !important;
+}
+
+html.dark .text-purple-950,
+html.dark .text-purple-900,
+html.dark .text-purple-800,
+html.dark .text-purple-700 {
+  color: #d8b4fe !important;
+}
+
+/* Primary Dark Buttons & Form Controls in Dark Mode */
+html.dark button.bg-slate-900 {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+html.dark button.bg-slate-900:hover {
+  background-color: #0369a1 !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover {
+  background-color: #1e293b !important;
+}

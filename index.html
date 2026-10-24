@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var nativeFetch = window.fetch ? window.fetch.bind(window) : undefined;
+          var currentFetch = nativeFetch;
+          var ensureWritableFetch = function (target) {
+            if (!target) return;
+            var desc = Object.getOwnPropertyDescriptor(target, 'fetch');
+            if (!desc || desc.configurable !== false) {
+              Object.defineProperty(target, 'fetch', {
+                configurable: true,
+                enumerable: true,
+                get: function () {
+                  return currentFetch;
+                },
+                set: function (nextFetch) {
+                  if (typeof nextFetch === 'function') {
+                    currentFetch = nextFetch;
+                  }
+                },
+              });
+            }
+          };
+          ensureWritableFetch(window);
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            ensureWritableFetch(Window.prototype);
+          }
+        } catch (_err) {
+          // Ignore if non-configurable in this frame
+        }
+
+        window.addEventListener(
+          'error',
+          function (event) {
+            var msg = String((event && event.message) || '');
+            var file = String((event && event.filename) || '');
+            if (
+              msg.indexOf('Cannot set property fetch of #<Window>') !== -1 ||
+              file.indexOf('chrome-extension://') === 0
+            ) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+              return false;
+            }
+          },
+          true
+        );
+
+        window.addEventListener(
+          'unhandledrejection',
+          function (event) {
+            var reason = String((event && event.reason && (event.reason.message || event.reason)) || '');
+            var stack = String((event && event.reason && event.reason.stack) || '');
+            if (
+              reason.indexOf('Cannot set property fetch of #<Window>') !== -1 ||
+              stack.indexOf('chrome-extension://') !== -1
+            ) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          },
+          true
+        );
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WBPSC Clerkship Shikshak — AI Exam Prep & Mock Test Platform</title>
+    <meta name="description" content="Complete bilingual (Bengali & English) AI-powered examination preparation platform, verified PYQ bank, server-timed Part-I mock test simulator, and child-friendly personal teacher for the WBPSC Clerkship Examination." />
+    <meta property="og:title" content="WBPSC Clerkship Shikshak — AI Exam Prep & Mock Test Platform" />
+    <meta property="og:description" content="Complete bilingual (Bengali & English) AI-powered examination preparation platform, verified PYQ bank, server-timed Part-I mock test simulator, and child-friendly personal teacher for the WBPSC Clerkship Examination." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased selection:bg-sky-100 selection:text-sky-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
